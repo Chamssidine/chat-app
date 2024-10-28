@@ -1,0 +1,11 @@
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure height overflow is properly managed */
+html,
+body,
+#root {
+  height: 100%;
+}
