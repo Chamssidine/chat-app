@@ -29,33 +29,46 @@ function getApiKey() {
 const conversationHistory = {};
 
 app.post('/api/chat', async (req, res) => {
-    const { message, model, sessionId } = req.body; // Include a sessionId to manage conversations
-   
+    const { message, model, sessionId } = req.body; // Include sessionId to manage conversations
     const apiKey = getApiKey();
     console.log('message:', message);
     console.log('model:', model);
-    if(model == "dall-e-3")
-        urlBase = 'https://api.openai.com/v1/images/generations';
-    else
-        urlBase = 'https://api.openai.com/v1/chat/completions'
 
-    console.log('urlbase:',urlBase);
-    // Initialize the conversation history for this session if it doesn't exist
-    if (!conversationHistory[sessionId]) {
-        conversationHistory[sessionId] = [];
+    let requestData;
+
+    if (model === "dall-e-3") {
+        urlBase = 'https://api.openai.com/v1/images/generations';
+
+        requestData = {
+            model: "dall-e-3", // Vérifiez que le modèle est bien écrit en dur
+            prompt: message, 
+            n: 1,
+            size: "1024x1024"
+        };
+        
+    } else {
+        urlBase = 'https://api.openai.com/v1/chat/completions';
+
+        // Initialize conversation history for this session if it doesn't exist
+        if (!conversationHistory[sessionId]) {
+            conversationHistory[sessionId] = [];
+        }
+
+        // Add user's message to conversation history
+        conversationHistory[sessionId].push({ role: 'user', content: message });
+
+        requestData = {
+            model: model,
+            messages: conversationHistory[sessionId], // Send the entire conversation history
+        };
     }
 
-    // Add the user's message to the conversation history
-    conversationHistory[sessionId].push({ role: 'user', content: message });
-
     try {
+        console.log("Sending request to OpenAI:", requestData);
+        
         const response = await axios.post(
-            urlBase
-           ,
-            {
-                model: model,
-                messages: conversationHistory[sessionId], // Send the entire conversation history
-            },
+            urlBase,
+            requestData,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,17 +76,24 @@ app.post('/api/chat', async (req, res) => {
                 },
             }
         );
-
-        const botResponse = response.data.choices[0].message.content;
-
-        // Add the bot's response to the conversation history
-        conversationHistory[sessionId].push({ role: 'assistant', content: botResponse });
-
+    
+        let botResponse;
+    
+        if (model === "dall-e-3") {
+            console.log("DALL·E Response:", response.data);
+            botResponse = response.data.data[0].url; // Vérifiez ici si data[0] existe
+        } else {
+            botResponse = response.data.choices[0].message.content;
+            conversationHistory[sessionId].push({ role: 'assistant', content: botResponse });
+        }
+    
         res.json({ reply: botResponse });
+    
     } catch (error) {
-        console.error('Error communicating with OpenAI:', error);
-        res.status(500).json({ error: 'Failed to get a response from OpenAI.' });
+        console.error('❌ Erreur API OpenAI:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'Échec de communication avec OpenAI.' });
     }
+    
 });
 
 // Serve index.html at root
