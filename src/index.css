@@ -9,3 +9,30 @@ body,
 #root {
   height: 100%;
 }
+
+/* Ensure body and root element take full height */
+body, html {
+  height: 100%;
+  margin: 0;
+}
+
+.message-bubble {
+  padding: 10px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+}
+
+.message-bubble.me {
+  background-color: #4caf50;
+  text-align: right;
+}
+
+.message-bubble.other {
+  background-color: #f1f1f1;
+}
+
+.message-input {
+  padding: 10px;
+  border-radius: 30px;
+  background-color: #ffffff;
+}

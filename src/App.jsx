@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { solarizedlight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+
 function App() {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
@@ -105,16 +106,27 @@ function App() {
 
         {/* Input Section */}
         <div className="bg-gray-800 p-3 flex items-center">
-          <select
-            onChange={(e) => setGptModel(e.target.value)}
-            className="bg-gray-800 text-white p-2 rounded mr-2"
-          >
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="dall-e-3">DALL-E 3</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-          </select>
+  <select
+    onChange={(e) => setGptModel(e.target.value)}
+    className="bg-gray-800 text-white p-2 rounded mr-2"
+  >
+    {/* Chat & multimodal “omni” flagship */}
+    <option value="gpt-4o">GPT-4o</option>                      {/* :contentReference[oaicite:0]{index=0} */}
+    {/* Version légère et rapide de l’omni */}
+    <option value="gpt-4o-mini">GPT-4o-mini</option>             {/* :contentReference[oaicite:1]{index=1} */}
+    {/* Nouvelle famille GPT-4.1 */}
+    <option value="gpt-4.1">GPT-4.1</option>                     {/* :contentReference[oaicite:2]{index=2} */}
+    <option value="gpt-4.1-mini">GPT-4.1-mini</option>           {/* :contentReference[oaicite:3]{index=3} */}
+    <option value="gpt-4.1-nano">GPT-4.1-nano</option>           {/* :contentReference[oaicite:4]{index=4} */}
+    {/* Preview du tout dernier flagship (Orion) */}
+    <option value="gpt-4.5-preview">GPT-4.5-preview</option>     {/* :contentReference[oaicite:5]{index=5} */}
+    {/* Meilleur rapport qualité/prix pour le chat */}
+    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>         {/* :contentReference[oaicite:6]{index=6} */}
+    {/* Contexte étendu à 16 384 tokens */}
+    <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K</option>  {/* :contentReference[oaicite:7]{index=7} */}
+    {/* Génération d’images haute-résolution */}
+    <option value="dall-e-3">DALL·E 3</option>                   {/* :contentReference[oaicite:8]{index=8} */}
+  </select>
 
           <input
             type="text"
