@@ -10,7 +10,16 @@ import React, { useReducer } from 'react';
 export default function App() {
 
   const initialState = {
-    sessions: JSON.parse(localStorage.getItem("sessions")) || [],
+    sessions: [],
+    selectedsession: {
+      id: "session-1",
+      name: "Chat with John",
+      createdAt: "2023-04-01T00:00:00Z",
+      model: "gpt-4o",
+      role: "user",
+      messages: []
+    }
+    ,
     currentSessionId: null,
   };
 
@@ -18,30 +27,75 @@ export default function App() {
   const reducer = (state, action) => {
     switch (action.type) {
       case "SET_SESSIONS":
-        const updatedSessions = [...action.payload];
-        if (updatedSessions.length > 10) {
-          updatedSessions.shift(); // Limit sessions to 10
-        }
-        localStorage.setItem("sessions", JSON.stringify(updatedSessions));
-        return { ...state, sessions: updatedSessions };
+        //console.log(action.payload);
+        return { ...state, sessions: action.payload };
       case "SET_CURRENT_SESSION":
         return { ...state, currentSessionId: action.payload };
-      case "ADD_MESSAGE":
-        const newSessions = state.sessions.map((session) =>
-          session.id === state.currentSessionId
-            ? { ...session, messages: [...session.messages, action.payload] }
-            : session
-        );
-        localStorage.setItem("sessions", JSON.stringify(newSessions));
-        return { ...state, sessions: newSessions };
-      default:
-        return state;
-    }
-  };
+
+      case "LOAD_MESSAGES":
+        return { ...state, selectedsession: action.payload };
+        case "ADD_MESSAGE": {
+          const updatedSessions = state.sessions.map((session) =>
+            session.id === state.currentSessionId
+              ? { ...session, messages: [...(session.messages || []), action.payload] }
+              : session
+          );
+        
+          const updatedSelectedSession = state.selectedsession && state.selectedsession.id === state.currentSessionId
+            ? {
+                ...state.selectedsession,
+                messages: [...(state.selectedsession.messages || []), action.payload],
+              }
+            : state.selectedsession;
+        
+          return {
+            ...state,
+            sessions: updatedSessions,
+            selectedsession: updatedSelectedSession, // 🔥 maintenant updated aussi
+          };
+        }
+    }        
+  }
+
 
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const currentSession = state.sessions.find((s) => s.id === state.currentSessionId);
+  // UI states
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [message, setMessage] = useState("");
+  const [gptModel, setGptModel] = useState("gpt-4o");
+  const [file, setFile] = useState(null);
+  const [image, setImage] = useState(null);
+  const messagesEndRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+
+  const conversationHistory = state.sessions.map((session) => ({
+    title: session.conversationName,
+    sessionId: session.sessionId,
+  }));
+
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      console.log("stateID", state.currentSessionId);
+      setLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:3000/api/chat/conversation/${state.currentSessionId}`);
+        const fetchedMessages = response.data;
+        dispatch({ type: "LOAD_MESSAGES", payload: fetchedMessages });
+      } catch (error) {
+        console.error("Error fetching conversation:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Call the loadMessages function
+    loadMessages();
+  }, [state.currentSessionId]);
+
+
+
   const createNewSession = (model = "gpt-4o") => {
     const newSession = {
       id: uuidv4(),
@@ -61,64 +115,53 @@ export default function App() {
 
 
 
-  const addMessageToSession = (message) => {
-    dispatch({ type: "ADD_MESSAGE", payload: message });
-  };
 
 
-  // UI states
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [message, setMessage] = useState("");
-  const [gptModel, setGptModel] = useState("gpt-4o");
-  const [file, setFile] = useState(null);
-  const [image, setImage] = useState(null);
-  const messagesEndRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-
-  const conversationHistory = state.sessions.map((session) => ({
-    title: session.name,
-    sessionId: session.id,
-  }));
-
-
-
-  const [activeSessionId, setActiveSessionId] = useState(null);
-
-  // Handle chat click
-  const handleChatClick = (chat) => {
-    setActiveSessionId(chat.sessionId);
-    dispatch({ type: "SET_CURRENT_SESSION", payload: chat.sessionId });
-  
-    // Effacer les messages de la session active avant de charger la nouvelle session
-    dispatch({ type: "SET_SESSIONS", payload: state.sessions.map(session => {
-      if (session.id === chat.sessionId) {
-        return { ...session, messages: [] }; // Vider les messages
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/chat/conversation/fetch');
+        // console.log(response.data)
+        dispatch({ type: 'SET_SESSIONS', payload: response.data.sessions });
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
       }
-      return session;
-    })});
+    };
+
+    fetchConversations();
+  }, []);
+
+
+
+
+
+
+  const handleChatClick = async (chat) => {
+    console.log(chat);
+    dispatch({ type: "SET_CURRENT_SESSION", payload: chat.sessionId });
   };
-  
+
 
   const onRenameChat = (sessionId, newName) => {
     // Mettre à jour la conversation dans l'état
-    console.log(sessionId)
-    requestConversationRename(sessionId,newName)
-     
+    //console.log(sessionId)
+    requestConversationRename(sessionId, newName)
+
   };
-  
+
   const requestConversationRename = async (sessionId, newName) => {
     const payload = {
       sessionID: sessionId,
       conversationName: newName,
     };
-  
+
     try {
       const response = await axios.post(
         "http://localhost:3000/api/chat/conversation/rename/",
         payload
       );
-      console.log(response);
-  
+      //console.log(response);
+
       // If the API request is successful, update the session name in state and localStorage
       const updatedSessions = state.sessions.map((session) =>
         session.id === sessionId ? { ...session, name: newName } : session
@@ -128,31 +171,9 @@ export default function App() {
       alert(err);
     }
   };
-  
-  useEffect(() => {
-    if (state.currentSessionId) {
-      const fetchConversation = async () => {
-        setLoading(true);
-        try {
-          const response = await axios.get(
-            `http://localhost:3000/api/chat/conversation/${state.currentSessionId}`
-          );
-          const fetchedMessages = response.data.messages;
 
-          // Ici, il faudrait ajouter tous les messages récupérés.
-          fetchedMessages.forEach((message) => {
-            dispatch({ type: "ADD_MESSAGE", payload: message });
-          });
-        } catch (error) {
-          console.error("Error fetching conversation:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
 
-      fetchConversation();
-    }
-  }, [state.currentSessionId]);
+
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -181,28 +202,26 @@ export default function App() {
   const sendMessage = async (text) => {
     if (!text.trim() && !image) return;
 
-    if (!state.currentSessionId) {
-      createNewSession();
-      return;
-    }
-
+    // Crée un nouveau message utilisateur
     const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+    const userMessage = {
+      id: Date.now(),
+      role: "user",
+      content: text.trim(),
+      sender: "user",
+      timestamp,
+      image: image,
+    };
+
+    // AJOUTER immédiatement le message dans l'état local
+    dispatch({ type: "ADD_MESSAGE", payload: userMessage });
+    console.log("Selected Session After Adding Message:", state.selectedsession);
+    setMessage("");
+    setFile(null);
+    setImage(null);
+
     try {
-      const userMessage = {
-        id: Date.now(),
-        role: "user",
-        content: text.trim(),
-        sender: "user",
-        timestamp,
-        image: image,
-      };
-
-      dispatch({ type: "ADD_MESSAGE", payload: userMessage });
-      setMessage("");
-      setFile(null);
-      setImage(null);
-
       const payload = {
         message: text ? text.trim() : "Image",
         model: gptModel,
@@ -213,7 +232,7 @@ export default function App() {
       };
 
       const response = await axios.post("http://localhost:3000/api/chat", payload);
-      console.log(response.data);
+
       const botMessage = {
         id: Date.now() + 1000,
         role: "assistant",
@@ -222,9 +241,9 @@ export default function App() {
         imageUrl: gptModel === "dall-e-3" ? response.data.reply : response.data.imageUrl,
       };
 
+      // AJOUTER immédiatement aussi le message du bot
       dispatch({ type: "ADD_MESSAGE", payload: botMessage });
-      dispatch({ type: "SET_CURRENT_SESSION", payload: state.currentSessionId });  // This will trigger your useEffect hook
-
+      console.log("Selected Session After Adding Message:", state.selectedsession);
     } catch (error) {
       console.error("Error sending message:", error);
 
@@ -240,6 +259,7 @@ export default function App() {
   };
 
 
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -251,7 +271,7 @@ export default function App() {
         onDeleteChat={handleDeleteChat}
         onAddChat={handleAddChat}
         onRenameChat={onRenameChat}
-        activeSessionId={activeSessionId} // Passer la session active
+        activeSessionId={state.currentSessionId} // Passer la session active
       />
 
 
@@ -288,14 +308,14 @@ export default function App() {
         <div className="flex flex-col flex-1 overflow-hidden bg-gray-50 w-full">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 flex-col w-full max-w-9/10">
-            {currentSession?.messages.map((msg, index) => (
+            {state.selectedsession.messages.map((msg, index) => (
               <MessageBubble
-                key={msg.id || index} // Utilise `msg.id` si disponible, sinon utilise l'index
-                text={msg.content}
-                sender={msg.role}
-                image={msg.image}
-                timestamp={msg.timestamp}
-                imageUrl={msg.imageUrl}
+              key={msg._id || index} // <- attention : `_id` au lieu de `id`
+              text={msg.content}
+              sender={msg.role}
+              image={msg.image}
+              timestamp={msg.timestamp}
+              imageUrl={msg.imageUrl}
               />
             ))}
             <div ref={messagesEndRef} />

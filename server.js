@@ -32,7 +32,6 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // In-memory history store
-const conversationHistory = {};
 
 // Function definition for image creation
 const createImageFn = {
@@ -102,6 +101,17 @@ function isImageModel(model) {
   return model.toLowerCase().startsWith("dall-e");
 }
 
+app.get("/api/chat/conversation/fetch", async (req, res) => {
+  try {
+    const conversations = await Conversation.find({}); // Fetch ALL conversations
+    console.log(conversations);
+    res.status(200).json({ sessions: conversations });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch conversations" });
+  }
+});
+
 // Fetch conversation by sessionId
 app.get("/api/chat/conversation/:sessionId", async (req, res) => {
   const { sessionId } = req.params;
@@ -120,7 +130,7 @@ app.get("/api/chat/conversation/:sessionId", async (req, res) => {
 });
 
 app.post("/api/chat/conversation/rename/", async (req, res) => {
-  console.log("Request Body:", req.body);  // Log the request body to confirm
+  console.log("Request Body:", req.body); // Log the request body to confirm
 
   // Use the exact keys as in the request body
   const { sessionID, conversationName } = req.body;
@@ -130,7 +140,9 @@ app.post("/api/chat/conversation/rename/", async (req, res) => {
   console.log("conversationName:", conversationName);
 
   if (!sessionID || !conversationName) {
-    return res.status(400).json({ error: "Missing sessionID or conversationName" });
+    return res
+      .status(400)
+      .json({ error: "Missing sessionID or conversationName" });
   }
 
   try {
@@ -146,11 +158,11 @@ app.post("/api/chat/conversation/rename/", async (req, res) => {
 
     return res.json({ reply: "Renamed successfully" });
   } catch (err) {
-    return res.status(500).json({ error: "Error renaming conversation: " + err.stack });
+    return res
+      .status(500)
+      .json({ error: "Error renaming conversation: " + err.stack });
   }
 });
-
-
 
 // Chat endpoint with function-calling support
 app.post("/api/chat", async (req, res) => {
@@ -224,67 +236,81 @@ app.post("/api/chat", async (req, res) => {
 
     const msg = initial.choices[0].message;
 
-    if (msg.function_call && msg.function_call.name === giveConversationNameFn.name) {
+    if (
+      msg.function_call &&
+      msg.function_call.name === giveConversationNameFn.name
+    ) {
       try {
         // Parse the function call arguments to get the new name
         const fnArgs = JSON.parse(msg.function_call.arguments || "{}");
         const newConversationName = `Conversation based on: ${fnArgs.prompt}`;
-    
-        console.log("Attempting to update conversation name:", newConversationName);
-    
+
+        console.log(
+          "Attempting to update conversation name:",
+          newConversationName
+        );
+
         // Find the existing conversation by sessionId
-        const conversation = await Conversation.findOne({ sessionId: sessionId });
-    
+        const conversation = await Conversation.findOne({
+          sessionId: sessionId,
+        });
+
         if (!conversation) {
           console.error("Conversation not found with sessionId:", sessionId);
           return res.status(404).json({ error: "Conversation not found" });
         }
-    
+
         // Update the conversation name
         conversation.conversationName = newConversationName;
-    
+
         // Add system message confirming the new name (optional)
         conversation.messages.push({
           role: "system",
           content: `Conversation renamed to: ${newConversationName}`,
         });
-    
+
         // Save the updated conversation
         await conversation.save();
-        console.log("Conversation name updated successfully:", newConversationName);
-    
+        console.log(
+          "Conversation name updated successfully:",
+          newConversationName
+        );
+
         // Now the conversation name is updated, move to the next message flow
         const finalChat = await openai.chat.completions.create({
           model,
           messages: normalizeMessages(conversation.messages),
         });
-    
+
         // Check if final response is valid
         if (!finalChat.choices || finalChat.choices.length === 0) {
           console.error("No response from OpenAI for final message.");
           return res.status(500).json({ error: "No response from OpenAI." });
         }
-    
+
         const finalMsg = finalChat.choices[0].message.content;
-    
+
         console.log("Final assistant message:", finalMsg);
-    
+
         // Update the conversation with the assistant's response
         conversation.messages.push({
           role: "assistant",
           content: finalMsg,
         });
-    
+
         await conversation.save();
-    
+
         // Send the final response to the client
         return res.json({ reply: finalMsg });
       } catch (error) {
-        console.error("Error updating conversation or processing response:", error.message);
+        console.error(
+          "Error updating conversation or processing response:",
+          error.message
+        );
         return res.status(500).json({ error: error.message });
       }
     }
-    
+
     if (msg.function_call) {
       const fnArgs = JSON.parse(msg.function_call.arguments || "{}");
 

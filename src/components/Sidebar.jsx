@@ -16,7 +16,11 @@ export default function Sidebar({
   const [newChatName, setNewChatName] = useState(""); // Nouveau nom de chat
   const [editingSessionId, setEditingSessionId] = useState(null); // Session en édition
 
+
+  //console.log(conversationHistory);
   const handleMenuClick = (e, sessionId) => {
+
+    
     e.stopPropagation();
     const rect = e.target.getBoundingClientRect();
    //
@@ -31,8 +35,8 @@ export default function Sidebar({
   };
 
   const handleRenameSubmit = (e, sessionId) => {
-    console.log(sessionId);
-    console.log(newChatName);
+    // console.log(sessionId);
+    // console.log(newChatName);
     e.preventDefault();
     if (newChatName.trim()) {
       onRenameChat(sessionId, newChatName);
@@ -68,7 +72,7 @@ export default function Sidebar({
             onClick={() => onChatClick(chat)}
           >
             <div>
-              <div className="font-semibold">
+              <div className="font-semibold overflow-hidden text-ellipsis">
                 {editingSessionId === chat.sessionId ? (
                   <input
                     type="text"
@@ -85,7 +89,10 @@ export default function Sidebar({
                     }}
                   />
                 ) : (
-                  chat.title
+                  <p className="font-semibold overflow-hidden text-sm text-ellipsis" >
+                    {chat.title}
+
+                  </p>
                 )}
               </div>
               <div className="text-sm text-gray-500">{chat.lastMessage}</div>
