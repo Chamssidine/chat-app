@@ -251,7 +251,7 @@ export default function App() {
     }
   };
   
-
+  console.log(selected);
   return (
     <div className="flex h-screen">
       {/* Sidebar */}

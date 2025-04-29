@@ -18,63 +18,86 @@ const MessageBubble = ({ text, sender, timestamp, imageUrl, image }) => {
     document.body.removeChild(link);
   };
 
+  const isUser = sender === 'user';
   return (
-    <div className={`flex flex-col my-2 mx-4 transition-transform duration-300 ${sender === 'user' ? 'items-end' : 'items-start'}`}>
-      <div className={`relative px-3 py-2 max-w-xl mx-auto rounded-lg shadow-md transition-all duration-300 transform ${sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'} ${sender === 'user' ? 'mr-2' : 'ml-2'}`}>
-        
-        {image || imageUrl ? (
-          <div className="relative mb-2">
-            <img src={image || imageUrl} alt="Uploaded" className="w-full h-auto rounded-lg" />
-            <button
-              onClick={() => downloadImage(image || imageUrl)}
-              className="absolute top-2 right-2 bg-white/70 hover:bg-white p-2 rounded-full"
-              title="Télécharger l'image"
-            >
-              <FiDownload className="text-black" size={18} />
-            </button>
+    <div className={`flex flex-col my-4 px-4 transition-all duration-300 ease-out animate-fade-in ${isUser ? 'items-end' : 'items-start'}`}>
+      <div className="relative flex gap-2 items-start max-w-xl w-full">
+        {/* Avatar (optional icon for AI or initials) */}
+        {!isUser && (
+          <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-bold text-white">
+            🤖
           </div>
-        ) : null}
+        )}
 
-        <div className="prose prose-sm dark:prose-invert whitespace-pre-wrap">
-          <ReactMarkdown
-            components={{
-              code({ node, inline, className, children, ...props }) {
-                const codeContent = String(children).trim();
-                if (inline) {
+<div className={`
+  relative px-4 py-3 rounded-2xl shadow-md
+  ${isUser
+    ? 'bg-gray-100 dark:bg[#e3f2fd] dark:text-gray-600'
+    : 'bg-gray-100 text-gray-100 dark:bg-[#eef0f2] dark:text-gray-600'}
+  w-full
+`}>
+
+            {/* Image rendering */}
+          {(image || imageUrl) && (
+          
+            <div className="relative mb-3">
+              <img src={image || imageUrl || text} alt="Uploaded" className="w-full h-auto rounded-lg" />
+              <button
+                onClick={() => downloadImage(image || imageUrl)}
+                className="absolute top-2 right-2 bg-white/70 hover:bg-white p-2 rounded-full"
+                title="Télécharger l'image"
+              >
+                <FiDownload className="text-black" size={18} />
+              </button>
+            </div>
+          )}
+
+          {/* Markdown content */}
+          <div className="prose prose-base dark:prose-invert prose-pre:rounded-lg prose-headings:font-semibold prose-p:leading-relaxed prose-img:rounded-lg max-w-none whitespace-pre-wrap">
+            <ReactMarkdown
+              components={{
+                code({ node, inline, className, children, ...props }) {
+                  const codeContent = String(children).trim();
+                  if (inline) {
+                    return (
+                      <code className="bg-gray-200 text-sm rounded px-1 dark:bg-gray-700 dark:text-white" {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
                   return (
-                    <code className="bg-gray-200 rounded px-1" {...props}>
-                      {children}
-                    </code>
+                    <div className="relative mb-2">
+                      <button
+                        onClick={() => copyToClipboard(codeContent)}
+                        className="absolute top-2 right-2 bg-white/70 hover:bg-white p-2 rounded-full"
+                        title="Copier le code"
+                      >
+                        <FiCopy className="text-black" size={18} />
+                      </button>
+                      <SyntaxHighlighter
+                        style={oneDark}
+                        language="javascript"
+                        PreTag="div"
+                        customStyle={{ borderRadius: '8px', fontSize: '14px' }}
+                        {...props}
+                      >
+                        {codeContent}
+                      </SyntaxHighlighter>
+                    </div>
                   );
-                }
-                return (
-                  <div className="relative mb-2">
-                    <button
-                      onClick={() => copyToClipboard(codeContent)}
-                      className="absolute top-2 right-2 bg-white/70 hover:bg-white p-2 rounded-full"
-                      title="Copier le code"
-                    >
-                      <FiCopy className="text-black" size={18} />
-                    </button>
-                    <SyntaxHighlighter
-                      style={oneDark}
-                      language="javascript"
-                      PreTag="div"
-                      customStyle={{ borderRadius: '8px', fontSize: '14px' }}
-                      {...props}
-                    >
-                      {codeContent}
-                    </SyntaxHighlighter>
-                  </div>
-                );
-              },
-            }}
-          >
-            {text}
-          </ReactMarkdown>
+                },
+              }}
+            >
+              {text}
+            </ReactMarkdown>
+          </div>
+
+          {/* Timestamp badge */}
+          <div className="absolute -bottom-4 right-2 text-[10px] text-gray-600 dark:text-gray-300 ">
+            {timestamp}
+          </div>
         </div>
       </div>
-      <div className="text-xs text-gray-500 mt-1">{timestamp}</div>
     </div>
   );
 };

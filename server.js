@@ -3,7 +3,7 @@ import cors from "cors";
 import path from "path";
 import OpenAI from "openai";
 import { fileURLToPath } from "url";
-
+import fs from 'fs';
 import mongoose from "mongoose";
 import Conversation from "./src/models/Conversation.js"; // import our new model
 
@@ -20,6 +20,9 @@ mongoose
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const promptPath = path.join(__dirname, 'developerPrompt.md');
+const developerPromptContent = fs.readFileSync(promptPath, 'utf-8');
+
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -31,7 +34,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// In-memory history store
+
+const developerMessage = {
+  role: 'developer',
+  content: developerPromptContent,
+};
 
 // Function definition for image creation
 const createImageFn = {
@@ -187,6 +194,8 @@ app.post("/api/chat", async (req, res) => {
     if (!conversation) {
       // If no conversation exists, create a new one
       conversation = new Conversation({ sessionId, userId, messages: [] });
+      conversation.messages.push(developerMessage)
+      await conversation.save();
     }
 
     // Create the message to add
@@ -219,7 +228,6 @@ app.post("/api/chat", async (req, res) => {
         size: "1024x1024",
       });
       const imageUrl = imageRes.data[0]?.url;
-
       const assistantReply = { role: "assistant", content: imageUrl };
       conversation.messages.push(assistantReply);
       await conversation.save();
