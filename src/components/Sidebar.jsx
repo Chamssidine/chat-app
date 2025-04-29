@@ -1,5 +1,7 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { FaEllipsisV, FaSearch, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import React, { useState } from "react";
-import { FaTrash, FaPlus, FaEllipsisH, FaEdit } from "react-icons/fa";
+import { FiMoreVertical, FiSearch, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 export default function Sidebar({
   toggleSidebar,
@@ -11,146 +13,176 @@ export default function Sidebar({
   onRenameChat,
   activeSessionId,
 }) {
-  const [activeMenu, setActiveMenu] = useState(null); // Menu actif
-  const [menuPosition, setMenuPosition] = useState({ left: 60, top: 5 }); // Position du menu
-  const [newChatName, setNewChatName] = useState(""); // Nouveau nom de chat
-  const [editingSessionId, setEditingSessionId] = useState(null); // Session en édition
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState(null);
+  const [newChatName, setNewChatName] = useState("");
+
+  const inputRef = React.useRef(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const inputRefs =  React.useRef({}); // Stocke les refs par sessionId
 
 
-  //console.log(conversationHistory);
-  const handleMenuClick = (e, sessionId) => {
+  // Tri décroissant par date
+  const sorted = [...conversationHistory].sort(
+    (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+  );
 
-    
-    e.stopPropagation();
-    const rect = e.target.getBoundingClientRect();
-   //
-   //  setMenuPosition({ left: rect.left + 15, top: rect.top + 20 });
-    
-   setActiveMenu(sessionId === activeMenu ? null : sessionId);
-  };
-
-  const handleRenameChange = (e) => {
- 
-    setNewChatName(e.target.value);
-  };
+  // Filtre par recherche
+  const filtered = sorted.filter(c =>
+    (c.title || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleRenameSubmit = (e, sessionId) => {
-    // console.log(sessionId);
-    // console.log(newChatName);
     e.preventDefault();
     if (newChatName.trim()) {
       onRenameChat(sessionId, newChatName);
       setEditingSessionId(null);
       setNewChatName("");
-
     }
   };
 
   return (
+    // Dans JSX (diffs visuels en commentaires)
     <div
-      className={`h-full bg-white border-r p-4 flex flex-col transition-all duration-300 ${
-        isSidebarOpen ? "w-64 opacity-100" : "w-0 opacity-0"
-      }`}
+      className={`h-full bg-white border-r border-gray-200 px-4 pt-4 pb-2 flex flex-col transition-all duration-300 
++    text-sm text-gray-800
+    ${isSidebarOpen ? "w-64 opacity-100" : "w-0 opacity-0"}
+  `}
     >
-      <h2 className="text-xl font-bold mb-4">Historique</h2>
+      <h2 className="text-sm font-semibold mb-3 text-gray-500 tracking-wide uppercase">Historique</h2>
 
-      {/* Bouton pour ajouter une conversation */}
-      <button
-        onClick={onAddChat}
-        className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition mb-4"
-      >
-        <FaPlus />
-      </button>
+      {/* Recherche et ajout */}
+      <div className="flex items-center mb-4 justify-between gap-2">
+        {!isSearchOpen ? (
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="p-2 hover:bg-gray-100 rounded-md transition"
+            aria-label="Ouvrir la recherche"
+          >
+            <FaSearch />
+          </button>
+        ) : (
+          <div className="flex w-full gap-2">
+            <input
+              type="text"
+              autoFocus
+              placeholder="Rechercher…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  setIsSearchOpen(false);
+                }
+              }}
+              className="border border-gray-300 rounded-md px-2 py-1 text-sm w-full focus:outline-none focus:ring focus:ring-blue-200"
+            />
+            <button
+              onClick={() => setIsSearchOpen(false)}
+              className="p-2 hover:bg-gray-100 rounded-md transition"
+              aria-label="Fermer la recherche"
+            >
+              <FaSearch />
+            </button>
+          </div>
+        )}
+        <button
+          onClick={onAddChat}
+          className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition"
+          aria-label="Nouvelle conversation"
+        >
+          <FaPlus />
+        </button>
+      </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto">
-        {conversationHistory.map((chat, index) => (
+      {/* Liste des chats */}
+      <div className="flex-1 overflow-y-auto space-y-1">
+        {filtered.map(chat => (
           <div
-            key={index}
-            className={`p-2 rounded-lg hover:bg-gray-100 cursor-pointer transition flex justify-between items-center relative ${
-              chat.sessionId === activeSessionId ? "bg-blue-100" : ""
-            }`}
+            key={chat.sessionId}
+            className={`p-2 rounded-md flex justify-between items-center cursor-pointer group transition
+          ${chat.sessionId === activeSessionId ? "bg-blue-100" : "hover:bg-gray-100"}
+        `}
             onClick={() => onChatClick(chat)}
           >
-            <div>
-              <div className="font-semibold overflow-hidden text-ellipsis">
+            <div className="flex-1 overflow-hidden">
+              <p className="truncate">
                 {editingSessionId === chat.sessionId ? (
                   <input
-                    type="text"
+                    ref={(el) => inputRefs.current[chat.sessionId] = el}
                     value={newChatName}
-                    onChange={handleRenameChange}
-                    onBlur={() => setEditingSessionId(null)} // Annule si on clique en dehors
-                    className="border p-1 rounded-md"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleRenameSubmit(e, chat.sessionId);
-                        setEditingSessionId(null)
-                      }
-                    }}
+                    onChange={e => setNewChatName(e.target.value)}
+                    onBlur={() => setEditingSessionId(null)}
+                    onKeyDown={e => e.key === "Enter" && handleRenameSubmit(e, chat.sessionId)}
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
                   />
                 ) : (
-                  <p className="font-semibold overflow-hidden text-sm text-ellipsis" >
-                    {chat.title}
-
-                  </p>
+                  chat.title
                 )}
-              </div>
-              <div className="text-sm text-gray-500">{chat.lastMessage}</div>
+              </p>
             </div>
 
-            {/* Bouton menu */}
-            <button
-              onClick={(e) => handleMenuClick(e, chat.sessionId)}
-              className="text-gray-500 hover:text-gray-700 transition"
-            >
-              <FaEllipsisH />
-            </button>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-400 hidden sm:block">
+                {new Date(chat.updatedAt).toLocaleTimeString()}
+              </p>
 
-            {/* Menu contextuel */}
-            {activeMenu === chat.sessionId && (
-              <div
-                className="absolute z-10 bg-white shadow-lg rounded-md p-2 w-40 mt-1 border border-gray-200"
-                style={{
-                  left: `${menuPosition.left}px`,
-                  top: `${menuPosition.top}px`,
-                }}
-              >
-                {/* Option Renommer */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingSessionId(chat.sessionId);
-                    setNewChatName(chat.title);
-                    setActiveMenu(false)
-                  }}
-                  className="block w-full text-left text-gray-700 hover:bg-gray-100 p-2 rounded-md flex items-center"
+              <DropdownMenu.Root
+  open={openMenuId === chat.sessionId}
+  onOpenChange={(isOpen) => setOpenMenuId(isOpen ? chat.sessionId : null)}
+>
+
+                <DropdownMenu.Trigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition"
+                  >
+                    <FaEllipsisV size={14} />
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={5}
+                  className="bg-white rounded-md shadow-lg border border-gray-200 text-sm overflow-hidden z-50"
                 >
-                  <FaEdit className="mr-2" />
-                  Renommer
-                </button>
-                {/* Option Supprimer */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteChat(chat.sessionId);
-                  }}
-                  className="block w-full text-left text-red-500 hover:bg-gray-100 p-2 rounded-md flex items-center"
-                >
-                  <FaTrash className="mr-2" />
-                  Supprimer
-                </button>
-              </div>
-            )}
+                  <DropdownMenu.Item
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setOpenMenuId(null);
+                      setEditingSessionId(chat.sessionId);
+                      setNewChatName(chat.title);
+                      setTimeout(() => {
+                        inputRef.current?.focus();
+                      }, 0);
+                    }}
+                    className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2 cursor-pointer"
+                  >
+                    <FaEdit className="text-gray-500" /> Renommer
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      onDeleteChat(chat.sessionId);
+                    }}
+                    className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-500 cursor-pointer"
+                  >
+                    <FaTrash className="text-red-500" /> Supprimer
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            </div>
           </div>
         ))}
       </div>
 
       <button
         onClick={toggleSidebar}
-        className="mt-4 p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+        className="mt-4 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition"
       >
         Fermer
       </button>
     </div>
+
   );
 }

@@ -11,18 +11,10 @@ export default function App() {
 
   const initialState = {
     sessions: [],
-    selectedsession: {
-      id: "session-1",
-      name: "Chat with John",
-      createdAt: "2023-04-01T00:00:00Z",
-      model: "gpt-4o",
-      role: "user",
-      messages: []
-    }
-    ,
     currentSessionId: null,
   };
 
+ 
 
   const reducer = (state, action) => {
     switch (action.type) {
@@ -34,31 +26,23 @@ export default function App() {
 
       case "LOAD_MESSAGES":
         return { ...state, selectedsession: action.payload };
-        case "ADD_MESSAGE": {
-          const updatedSessions = state.sessions.map((session) =>
-            session.id === state.currentSessionId
-              ? { ...session, messages: [...(session.messages || []), action.payload] }
+        case 'ADD_MESSAGE': {
+          const updatedSessions = state.sessions.map(session =>
+            session.sessionId === state.currentSessionId
+              ? {
+                  ...session,
+                  messages: [...session.messages, action.payload]
+                }
               : session
           );
-        
-          const updatedSelectedSession = state.selectedsession && state.selectedsession.id === state.currentSessionId
-            ? {
-                ...state.selectedsession,
-                messages: [...(state.selectedsession.messages || []), action.payload],
-              }
-            : state.selectedsession;
-        
-          return {
-            ...state,
-            sessions: updatedSessions,
-            selectedsession: updatedSelectedSession, // 🔥 maintenant updated aussi
-          };
+          return { ...state, sessions: updatedSessions };
         }
+        
     }        
   }
-
-
+  
   const [state, dispatch] = useReducer(reducer, initialState);
+  const selected = state.sessions.find(s => s.sessionId === state.currentSessionId) || { messages: [] };
 
   // UI states
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -68,28 +52,29 @@ export default function App() {
   const [image, setImage] = useState(null);
   const messagesEndRef = useRef(null);
   const [loading, setLoading] = useState(false);
-
-  const conversationHistory = state.sessions.map((session) => ({
-    title: session.conversationName,
-    sessionId: session.sessionId,
+  
+  const conversationHistory = state.sessions.map(session => ({
+    sessionId:    session.sessionId,              // clef unique
+    title:        session.conversationName    || "",          // votre nom de session
+    updatedAt:    session.updatedAt || session.createdAt,
+    lastMessage:  (session.messages.slice(-1)[0]?.content) || "",
   }));
+  
 
-
+  const loadMessages = async () => {
+    console.log("stateID", state.currentSessionId);
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:3000/api/chat/conversation/${state.currentSessionId}`);
+      const fetchedMessages = response.data;
+      dispatch({ type: "LOAD_MESSAGES", payload: fetchedMessages });
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const loadMessages = async () => {
-      console.log("stateID", state.currentSessionId);
-      setLoading(true);
-      try {
-        const response = await axios.get(`http://localhost:3000/api/chat/conversation/${state.currentSessionId}`);
-        const fetchedMessages = response.data;
-        dispatch({ type: "LOAD_MESSAGES", payload: fetchedMessages });
-      } catch (error) {
-        console.error("Error fetching conversation:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     // Call the loadMessages function
     loadMessages();
   }, [state.currentSessionId]);
@@ -98,7 +83,7 @@ export default function App() {
 
   const createNewSession = (model = "gpt-4o") => {
     const newSession = {
-      id: uuidv4(),
+      sessionId: uuidv4(),
       name: `Chat - ${new Date().toLocaleTimeString()}`,
       createdAt: new Date().toISOString(),
       model,
@@ -114,8 +99,17 @@ export default function App() {
   };
 
 
+  useEffect(() => {
+    if (state.sessions.length > 0 && !state.currentSessionId) {
+      const last = state.sessions[state.sessions.length - 1];
+      dispatch({ type: "SET_CURRENT_SESSION", payload: last.sessionId });
+    }
+  }, [state.sessions]);
 
-
+  useEffect(() => {
+    if (!state.currentSessionId) return;
+    loadMessages();
+  }, [state.currentSessionId]);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -180,7 +174,7 @@ export default function App() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [state.sessions, state.currentSessionId]);
+  }, [selected.messages]);
 
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -201,64 +195,62 @@ export default function App() {
   };
   const sendMessage = async (text) => {
     if (!text.trim() && !image) return;
-
-    // Crée un nouveau message utilisateur
+  
     const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
+  
+    // 1. Ajoute directement le message utilisateur
     const userMessage = {
-      id: Date.now(),
+      _id: Date.now(),  // utilise bien _id ici, pas juste id
       role: "user",
       content: text.trim(),
-      sender: "user",
       timestamp,
       image: image,
     };
-
-    // AJOUTER immédiatement le message dans l'état local
+  
     dispatch({ type: "ADD_MESSAGE", payload: userMessage });
-    console.log("Selected Session After Adding Message:", state.selectedsession);
+  
     setMessage("");
     setFile(null);
     setImage(null);
-
+  
     try {
+      // 2. Envoie à ton serveur
       const payload = {
-        message: text ? text.trim() : "Image",
+        message: text.trim(),
         model: gptModel,
         role: "user",
         sessionId: state.currentSessionId,
         image: image,
         userId: "id_123",
       };
-
+  
       const response = await axios.post("http://localhost:3000/api/chat", payload);
-
+  
+      // 3. Ajoute directement le message du bot
       const botMessage = {
-        id: Date.now() + 1000,
+        _id: Date.now() + 1, // génère un autre id temporaire (ou récupère si le serveur te renvoie l'ID)
         role: "assistant",
         content: gptModel === "dall-e-3" ? "Here is your generated image:" : response.data.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         imageUrl: gptModel === "dall-e-3" ? response.data.reply : response.data.imageUrl,
       };
-
-      // AJOUTER immédiatement aussi le message du bot
+  
       dispatch({ type: "ADD_MESSAGE", payload: botMessage });
-      console.log("Selected Session After Adding Message:", state.selectedsession);
+  
     } catch (error) {
       console.error("Error sending message:", error);
-
+  
       const errorMessage = {
-        id: Date.now() + 2000,
+        _id: Date.now() + 2,
         role: "assistant",
         content: "Error communicating with server.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-
+  
       dispatch({ type: "ADD_MESSAGE", payload: errorMessage });
     }
   };
-
-
+  
 
   return (
     <div className="flex h-screen">
@@ -308,7 +300,7 @@ export default function App() {
         <div className="flex flex-col flex-1 overflow-hidden bg-gray-50 w-full">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 flex-col w-full max-w-9/10">
-            {state.selectedsession.messages.map((msg, index) => (
+            {selected.messages.map((msg, index) => (
               <MessageBubble
               key={msg._id || index} // <- attention : `_id` au lieu de `id`
               text={msg.content}
