@@ -111,17 +111,18 @@ export default function App() {
     loadMessages();
   }, [state.currentSessionId]);
 
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/chat/conversation/fetch');
-        // console.log(response.data)
-        dispatch({ type: 'SET_SESSIONS', payload: response.data.sessions });
-      } catch (error) {
-        console.error('Error fetching conversations:', error);
-      }
-    };
+  const fetchConversations = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/chat/conversation/fetch');
+      // console.log(response.data)
+      dispatch({ type: 'SET_SESSIONS', payload: response.data.sessions });
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    }
+  };
 
+  useEffect(() => {
+    
     fetchConversations();
   }, []);
 
@@ -161,6 +162,7 @@ export default function App() {
         session.id === sessionId ? { ...session, name: newName } : session
       );
       dispatch({ type: "SET_SESSIONS", payload: updatedSessions }); // Update state
+      window.location.reload(); 
     } catch (err) {
       alert(err);
     }
@@ -185,8 +187,21 @@ export default function App() {
 
   const handleDeleteChat = (sessionId) => {
     // Supprimer la session du tableau
+    console.log("delete on ",sessionId)
     const updatedSessions = state.sessions.filter((session) => session.id !== sessionId);
     dispatch({ type: "SET_SESSIONS", payload: updatedSessions });
+    deleteConversation(sessionId)
+    fetchConversations()
+    window.location.reload(); 
+  };
+
+  const deleteConversation = async (sessionId) => {
+    try {
+      const response = await axios.delete(`http://localhost:3000/api/chat/conversation/delete/${sessionId}`);
+      console.log('Conversation deleted:', response.data.message);
+    } catch (error) {
+      console.error('Error deleting conversation:', error.response?.data?.message || error.message);
+    }
   };
 
   const handleAddChat = () => {
@@ -303,11 +318,11 @@ export default function App() {
             {selected.messages.map((msg, index) => (
               <MessageBubble
               key={msg._id || index} // <- attention : `_id` au lieu de `id`
-              text={msg.content}
+              text={msg.role !="user" && msg.role !="assistant"?"" :msg.content}
               sender={msg.role}
               image={msg.image}
               timestamp={msg.timestamp}
-              imageUrl={msg.imageUrl}
+              imageUrl={msg.role == "function"? msg.content: msg.imageUrl}
               />
             ))}
             <div ref={messagesEndRef} />

@@ -111,11 +111,30 @@ function isImageModel(model) {
 app.get("/api/chat/conversation/fetch", async (req, res) => {
   try {
     const conversations = await Conversation.find({}); // Fetch ALL conversations
-    console.log(conversations);
+   // console.log(conversations);
     res.status(200).json({ sessions: conversations });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch conversations" });
+  }
+});
+
+
+app.delete("/api/chat/conversation/delete/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    console.log(sessionId);
+    const deletedConversation = await Conversation.findOneAndDelete({ sessionId });
+
+    if (!deletedConversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    res.status(200).json({ message: "Conversation deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete conversation" });
   }
 });
 
