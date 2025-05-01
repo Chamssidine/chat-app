@@ -270,7 +270,7 @@ app.post("/api/chat", async (req, res) => {
       try {
         // Parse the function call arguments to get the new name
         const fnArgs = JSON.parse(msg.function_call.arguments || "{}");
-        const newConversationName = `Conversation based on: ${fnArgs.prompt}`;
+        const newConversationName = `${fnArgs.prompt}`;
 
         console.log(
           "Attempting to update conversation name:",

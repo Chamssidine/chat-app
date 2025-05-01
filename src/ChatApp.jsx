@@ -62,7 +62,7 @@ export default function App() {
   
 
   const loadMessages = async () => {
-    console.log("stateID", state.currentSessionId);
+    if(!state.currentSessionId)return;
     setLoading(true);
     try {
       const response = await axios.get(`http://localhost:3000/api/chat/conversation/${state.currentSessionId}`);
@@ -114,21 +114,21 @@ export default function App() {
   const fetchConversations = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/chat/conversation/fetch');
-      // console.log(response.data)
-      dispatch({ type: 'SET_SESSIONS', payload: response.data.sessions });
+      if(response.data.sessions.length === 0)
+      {
+        createNewSession();
+      } else{
+
+        dispatch({ type: 'SET_SESSIONS', payload: response.data.sessions });
+      }
     } catch (error) {
       console.error('Error fetching conversations:', error);
     }
   };
 
   useEffect(() => {
-    
     fetchConversations();
   }, []);
-
-
-
-
 
 
   const handleChatClick = async (chat) => {
@@ -250,6 +250,7 @@ export default function App() {
         imageUrl: gptModel === "dall-e-3" ? response.data.reply : response.data.imageUrl,
       };
   
+      fetchConversations();
       dispatch({ type: "ADD_MESSAGE", payload: botMessage });
   
     } catch (error) {

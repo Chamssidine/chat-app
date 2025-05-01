@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { FaEllipsisV, FaSearch, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import React, { useState } from "react";
-import { FiMoreVertical, FiSearch, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+
 
 export default function Sidebar({
   toggleSidebar,
@@ -118,14 +118,15 @@ export default function Sidebar({
                     className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
                   />
                 ) : (
-                  chat.title
+                  chat.title?chat.title:"New Chat"
                 )}
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <p className="text-xs text-gray-400 hidden sm:block">
-                {new Date(chat.updatedAt).toLocaleTimeString()}
+                {new Date(chat.updatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+              }
               </p>
 
               <DropdownMenu.Root
