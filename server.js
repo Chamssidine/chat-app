@@ -5,7 +5,10 @@ import OpenAI from "openai";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import mongoose from "mongoose";
-import Conversation from "./src/models/Conversation.js"; // import our new model
+import Conversation from "./src/models/Conversation.js"; 
+import { truncateMessagesToTokenLimit } from './src/utils/truncateMessages.js';
+
+
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGODB_URI, {
@@ -362,10 +365,11 @@ app.post("/api/chat", async (req, res) => {
       return res.json({ reply: imageUrl });
     }
     
+   
 
     const initial = await openai.chat.completions.create({
       model,
-      messages: normalizeMessages(conversation.messages),
+      messages:truncateMessagesToTokenLimit(normalizeMessages(conversation.messages)),
       functions: [createImageFn, giveConversationNameFn, processPdfFn],
       function_call: "auto",
     });
@@ -416,7 +420,7 @@ app.post("/api/chat", async (req, res) => {
         // Now the conversation name is updated, move to the next message flow
         const finalChat = await openai.chat.completions.create({
           model,
-          messages: normalizeMessages(conversation.messages),
+          messages: truncateMessagesToTokenLimit(normalizeMessages(conversation.messages)),
         });
 
         // Check if final response is valid
@@ -474,7 +478,7 @@ app.post("/api/chat", async (req, res) => {
         // 4) Requête finale à GPT pour qu’il reformule proprement
         const finalChat = await openai.chat.completions.create({
           model, // ex. "gpt-4.1"
-          messages: normalizeMessages(conversation.messages),
+          messages: truncateMessagesToTokenLimit(normalizeMessages(conversation.messages)),
         });
     
         const finalMessage = finalChat.choices[0].message;
@@ -521,7 +525,7 @@ app.post("/api/chat", async (req, res) => {
             content:
               "When replying, do not use markdown or embed images. Only write plain text.",
           },
-          ...normalizeMessages(conversation.messages),
+          ...truncateMessagesToTokenLimit(normalizeMessages(conversation.messages)),
         ],
       });
 
