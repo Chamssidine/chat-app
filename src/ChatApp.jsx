@@ -208,18 +208,21 @@ export default function App() {
     // Ajouter une nouvelle conversation
     createNewSession(); // Utilise la fonction que tu as déjà pour créer une nouvelle session
   };
-  const sendMessage = async (text) => {
-    if (!text.trim() && !image) return;
+  const sendMessage = async (input) => {
+    console.log("Message envoyé:", input);
+  
+    if (!input.text.trim() && !input.file ) return;
   
     const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   
-    // 1. Ajoute directement le message utilisateur
+    // Crée le message utilisateur
     const userMessage = {
-      _id: Date.now(),  // utilise bien _id ici, pas juste id
+      _id: Date.now(),
       role: "user",
-      content: text.trim(),
+      content: input.text.trim(),
       timestamp,
-      image: image,
+      image: input.file?.type === "image" ? input.file.data : null,
+      file: input.file?.type === "pdf" ? input.file : null, // ici on garde le fichier PDF entier si besoin
     };
   
     dispatch({ type: "ADD_MESSAGE", payload: userMessage });
@@ -229,23 +232,26 @@ export default function App() {
     setImage(null);
   
     try {
-      // 2. Envoie à ton serveur
+      // Construit le payload pour l’API
       const payload = {
-        message: text.trim(),
         model: gptModel,
-        role: "user",
         sessionId: state.currentSessionId,
-        image: image,
         userId: "id_123",
+        role: "user",
+        message: input.text?input.text.trim():"", // Add the message field here
+        image: input.file?.type === "image" ? input.file.data : null,
+        file: input.file?.type === "pdf" ? input.file : null,
       };
-  
+      
+      
       const response = await axios.post("http://localhost:3000/api/chat", payload);
   
-      // 3. Ajoute directement le message du bot
       const botMessage = {
-        _id: Date.now() + 1, // génère un autre id temporaire (ou récupère si le serveur te renvoie l'ID)
+        _id: Date.now() + 1,
         role: "assistant",
-        content: gptModel === "dall-e-3" ? "Here is your generated image:" : response.data.reply,
+        content: gptModel === "dall-e-3"
+          ? "Here is your generated image:"
+          : response.data.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         imageUrl: gptModel === "dall-e-3" ? response.data.reply : response.data.imageUrl,
       };
@@ -267,7 +273,7 @@ export default function App() {
     }
   };
   
-  console.log(selected);
+  
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -336,8 +342,7 @@ export default function App() {
           <MessageInput
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onSend={() => sendMessage(message)}
-            onImageSelect={handleImageSelect}
+            onSend={(input) => sendMessage(input)}
           />
         </div>
       </div>

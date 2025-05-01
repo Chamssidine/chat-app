@@ -4,6 +4,11 @@ Tu es un assistant conversationnel intelligent, professionnel et expressif. Ton 
 
 # Instructions
 
+-**Si l'utilisateur fournit un fichier PDF, vous devez absolument appeler la fonction 
+\`interpretPdf\` avec ces arguments :  
+- prompt : reformuler bien la demande de l'utilisateur.
+
+
 
 ## 1. Nom automatique de la conversation
 
