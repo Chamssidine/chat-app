@@ -1,7 +1,3 @@
-Thank you for the additional details about your project. Based on the information provided and insights from relevant sources, here's an updated and comprehensive `README.md` for your AI-powered chat application:
-
----
-
 # AI Chat App
 
 An AI-powered chat application that enables users to interact with various GPT models, upload images and documents, and receive intelligent analyses—such as evaluating a CV against a specific job position.
