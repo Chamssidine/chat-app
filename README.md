@@ -98,10 +98,3 @@ chat-app/
 
 Contributions are welcome! Please fork the repository and submit a pull request for any enhancements or bug fixes.
 
-## License
-
-This project is open-source and available under the [MIT License](LICENSE).
-
----
-
-Feel free to customize this `README.md` further to match any additional features or specific configurations of your chat application.
