@@ -87,11 +87,11 @@ const createImageFn = {
 };
 
 const giveConversationNameFn = {
-  name: "give_conversation_name", // Corrected typo here
+  name: "give_conversation_name",  
   description:
     "Give a name to the conversation based on its context and content",
   parameters: {
-    type: "object", // Explicitly declaring the type as object
+    type: "object", 
     properties: {
       prompt: {
         type: "string",
@@ -111,19 +111,19 @@ async function uploadBase64Pdf(base64String, filename = "document.pdf") {
   // Convert the base64 string into a buffer
   const buffer = Buffer.from(base64String, "base64");
 
-  // Define a temporary file path
+  
   const tempFilePath = path.join(__dirname, filename);
 
-  // Write the buffer into a temporary file on disk
+   
   fs.writeFileSync(tempFilePath, buffer);
 
-  // Use OpenAI API to upload the file
+ 
   const uploadedFile = await openai.files.create({
     file: fs.createReadStream(tempFilePath), // Create a readable stream from the file
     purpose: "assistants",
   });
 
-  // Clean up the temporary file after uploading
+   
   fs.unlinkSync(tempFilePath);
 
   return uploadedFile.id;
@@ -142,7 +142,7 @@ async function analyzePdfWithGpt(prompt, fileId) {
           },
           {
             type: "input_file",
-            file_id: fileId  // Use the file_id that was returned after the file upload
+            file_id: fileId   
           }
         ]
       }
