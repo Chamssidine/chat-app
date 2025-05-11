@@ -10,6 +10,7 @@ const __dirname = path.dirname(__filename);
 let fileID = "";
 export async function uploadBase64Pdf(base64String, filename = "document.pdf") {
 
+    // eslint-disable-next-line no-undef
     const buffer = Buffer.from(base64String, "base64");
 
 
@@ -17,6 +18,7 @@ export async function uploadBase64Pdf(base64String, filename = "document.pdf") {
 
 
     fs.writeFileSync(tempFilePath, buffer);
+
 
 
     const uploadedFile = await openai.files.create({
@@ -29,7 +31,9 @@ export async function uploadBase64Pdf(base64String, filename = "document.pdf") {
     fileID = uploadedFile.id;
     return uploadedFile.id;
 }
-const openai = new OpenAI();
+const openai = new OpenAI({
+    apiVersion: "2024-05-15",
+});
 async function analyzePdfWithGpt(prompt, fileId) {
     const gptResponse = await openai.responses.create({
         model: "gpt-4.1",

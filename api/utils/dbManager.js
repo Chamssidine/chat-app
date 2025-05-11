@@ -24,12 +24,13 @@ export const findOrCreateConversation = async (sessionId) => {
 
 export const saveMessageToDb = async (conversationId, message) => {
     const conversation = await Conversation.findOne({ sessionId: conversationId });
-    console.log(message);
     conversation.messages.push(message);
     await conversation.save();
 };
 
-export const updateConversationNameDb = async (conversationId,newConversationName) => {
-    const conversation = await Conversation.findOne({sessionId: conversationId });
+export const updateConversationNameDb = async (conversationId, newConversationName) => {
+    const conversation = await Conversation.findOne({ sessionId: conversationId });
+    if (!conversation) return;
     conversation.conversationName = newConversationName;
-}
+    await conversation.save(); // ← important
+};

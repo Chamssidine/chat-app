@@ -1,5 +1,5 @@
 export const FUNCTION_NAMES = {
-    PROCESS_PDF: "processPdfFn",
-    IMAGE_GEN: "imageGenerationFn",
-    RENAME_CONVERSATION: "renameConversationFn"
+    PROCESS_PDF: "process_pdf",
+    IMAGE_GEN: "image_gen",
+    RENAME_CONVERSATION: "rename_conversation"
 };

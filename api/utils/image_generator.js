@@ -1,25 +1,23 @@
 import OpenAI from "openai";
 
-const openai =  new OpenAI();
+const openai = new OpenAI({
+    apiVersion: "2024-05-15"
+});
 
-async function generateImage(prompt,model="dall-e-3"){
-    console.log("prompt");
-    console.log(prompt);
+async function generateImage(prompt, model = "dall-e-3") {
+
+
     const imageRes = await openai.images.generate({
         model,
-        prompt: prompt,
+        prompt,
         n: 1,
         size: "1024x1024",
     });
-    console.log(imageRes);
-    const imageUrl = imageRes.data[0]?.url;
 
-    return {role: "assistant", content: imageUrl};
+    const imageUrl = imageRes.data[0]?.url;
+    return imageUrl;
 }
 
-export async function  generateImageFromPrompt(prompt){
-
+export async function generateImageFromPrompt(prompt) {
     return await generateImage(prompt);
 }
-
-
