@@ -4,14 +4,14 @@ const messageSchema = new mongoose.Schema({
   role: { type: String, required: true },
   content: { 
     type: mongoose.Schema.Types.Mixed, 
-    required: false 
-  },   
+    required: false
+  },
 });
 
 
 const conversationSchema = new mongoose.Schema(
   {
-    sessionId: { type: String, required: true, unique: true },  
+    sessionId: { type: String, required: true, unique: true },
     conversationName: {type: String, required:false},
     userId: { type: String, required: true },
     messages: [messageSchema],

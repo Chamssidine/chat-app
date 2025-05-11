@@ -5,16 +5,38 @@ import { FiDownload, FiX } from 'react-icons/fi';
 const extractUrl = (content) => {
   try {
     if (!content) return '';
-    // Check if it's an object with a `url` field
-    if (typeof content === 'object' && content.url) return content.url;
-    // If it's a JSON string, parse and extract URL
-    const parsed = typeof content === 'string' ? JSON.parse(content) : null;
-    return parsed?.url || '';
+
+    if (typeof content === 'object') {
+      // New structure: { type: 'image_url', image_url: { url: '...', detail: '...' } }
+      if (content.type === 'image_url' && content.image_url?.url) {
+        return content.image_url.url;
+      }
+
+      // Fallback if it has a direct url property
+      if (content.url) return content.url;
+    }
+
+    if (typeof content === 'string') {
+      // base64 or direct link
+      if (content.startsWith('data:image') || content.startsWith('http')) {
+        return content;
+      }
+
+      // Try parsing JSON string
+      const parsed = JSON.parse(content);
+      if (parsed?.type === 'image_url' && parsed.image_url?.url) {
+        return parsed.image_url.url;
+      }
+      return parsed?.url || '';
+    }
+
+    return '';
   } catch {
-    // Return as is if not parsable, might be a direct string
-    return typeof content === 'string' ? content : '';
+    return '';
   }
 };
+
+
 
 const ImageFromJson = ({ content, onDownload }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);

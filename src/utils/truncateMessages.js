@@ -1,6 +1,6 @@
 import { encoding_for_model } from "tiktoken";
 
-// Adjust based on the model you're using
+
 const MODEL_NAME = "gpt-4-1106-preview";
 const MAX_TOKENS = 128000;
 const SAFETY_MARGIN = 1000; // Leave some room for the reply or function tokens

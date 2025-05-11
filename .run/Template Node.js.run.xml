@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="true" type="NodeJSConfigurationType" singleton="false" path-to-js-file="api/chat/server.js" working-dir="$PROJECT_DIR$">
+    <method v="2" />
+  </configuration>
+</component>

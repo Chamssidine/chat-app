@@ -4,7 +4,7 @@ import MessageBubble from "./components/MessageBubble";
 import MessageInput from "./components/MessageInput";
 import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
-import React, { useReducer } from 'react';
+import { useReducer } from 'react';
 
 
 export default function App() {
@@ -14,7 +14,7 @@ export default function App() {
     currentSessionId: null,
   };
 
- 
+
 
   const reducer = (state, action) => {
     switch (action.type) {
@@ -26,21 +26,21 @@ export default function App() {
 
       case "LOAD_MESSAGES":
         return { ...state, selectedsession: action.payload };
-        case 'ADD_MESSAGE': {
-          const updatedSessions = state.sessions.map(session =>
+      case 'ADD_MESSAGE': {
+        const updatedSessions = state.sessions.map(session =>
             session.sessionId === state.currentSessionId
-              ? {
+                ? {
                   ...session,
                   messages: [...session.messages, action.payload]
                 }
-              : session
-          );
-          return { ...state, sessions: updatedSessions };
-        }
-        
-    }        
+                : session
+        );
+        return { ...state, sessions: updatedSessions };
+      }
+
+    }
   }
-  
+
   const [state, dispatch] = useReducer(reducer, initialState);
   const selected = state.sessions.find(s => s.sessionId === state.currentSessionId) || { messages: [] };
 
@@ -48,22 +48,19 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [message, setMessage] = useState("");
   const [gptModel, setGptModel] = useState("gpt-4o");
-  const [file, setFile] = useState(null);
-  const [image, setImage] = useState(null);
   const messagesEndRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-  
+
   const conversationHistory = state.sessions.map(session => ({
     sessionId:    session.sessionId,              // clef unique
     title:        session.conversationName    || "",          // votre nom de session
     updatedAt:    session.updatedAt || session.createdAt,
     lastMessage:  (session.messages.slice(-1)[0]?.content) || "",
   }));
-  
+
 
   const loadMessages = async () => {
     if(!state.currentSessionId)return;
-    setLoading(true);
+    //set loading to true
     try {
       const response = await axios.get(`http://localhost:3000/api/chat/conversation/${state.currentSessionId}`);
       const fetchedMessages = response.data;
@@ -71,13 +68,13 @@ export default function App() {
     } catch (error) {
       console.error("Error fetching conversation:", error);
     } finally {
-      setLoading(false);
+    //should set loading to false
     }
   };
   useEffect(() => {
     // Call the loadMessages function
     loadMessages();
-  }, [state.currentSessionId]);
+  }, [loadMessages, state.currentSessionId]);
 
 
 
@@ -151,18 +148,16 @@ export default function App() {
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/chat/conversation/rename/",
-        payload
+      await axios.post(
+          "http://localhost:3000/api/chat/conversation/rename/",
+          payload
       );
-      //console.log(response);
-
       // If the API request is successful, update the session name in state and localStorage
       const updatedSessions = state.sessions.map((session) =>
-        session.id === sessionId ? { ...session, name: newName } : session
+          session.id === sessionId ? { ...session, name: newName } : session
       );
       dispatch({ type: "SET_SESSIONS", payload: updatedSessions }); // Update state
-      window.location.reload(); 
+      window.location.reload();
     } catch (err) {
       alert(err);
     }
@@ -181,9 +176,6 @@ export default function App() {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const handleImageSelect = (imageData) => {
-    setImage(imageData);
-  };
 
   const handleDeleteChat = (sessionId) => {
     // Supprimer la session du tableau
@@ -192,7 +184,7 @@ export default function App() {
     dispatch({ type: "SET_SESSIONS", payload: updatedSessions });
     deleteConversation(sessionId)
     fetchConversations()
-    window.location.reload(); 
+    window.location.reload();
   };
 
   const deleteConversation = async (sessionId) => {
@@ -210,11 +202,11 @@ export default function App() {
   };
   const sendMessage = async (input) => {
     console.log("Message envoyé:", input);
-  
+
     if (!input.text.trim() && !input.file ) return;
-  
+
     const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  
+
     // Crée le message utilisateur
     const userMessage = {
       _id: Date.now(),
@@ -224,13 +216,11 @@ export default function App() {
       image: input.file?.type === "image" ? input.file.data : null,
       file: input.file?.type === "pdf" ? input.file : null, // ici on garde le fichier PDF entier si besoin
     };
-  
+
     dispatch({ type: "ADD_MESSAGE", payload: userMessage });
-  
+
     setMessage("");
-    setFile(null);
-    setImage(null);
-  
+
     try {
       // Construit le payload pour l’API
       const payload = {
@@ -242,110 +232,110 @@ export default function App() {
         image: input.file?.type === "image" ? input.file.data : null,
         file: input.file?.type === "pdf" ? input.file : null,
       };
-      
-      
+
+
       const response = await axios.post("http://localhost:3000/api/chat", payload);
-  
+
       const botMessage = {
         _id: Date.now() + 1,
         role: "assistant",
         content: gptModel === "dall-e-3"
-          ? "Here is your generated image:"
-          : response.data.reply,
+            ? "Here is your generated image:"
+            : response.data.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         imageUrl: gptModel === "dall-e-3" ? response.data.reply : response.data.imageUrl,
       };
-  
+
       fetchConversations();
       dispatch({ type: "ADD_MESSAGE", payload: botMessage });
-  
+
     } catch (error) {
       console.error("Error sending message:", error);
-  
+
       const errorMessage = {
         _id: Date.now() + 2,
         role: "assistant",
         content: "Error communicating with server.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-  
+
       dispatch({ type: "ADD_MESSAGE", payload: errorMessage });
     }
   };
-  
-  
+
+
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <Sidebar
-        toggleSidebar={toggleSidebar}
-        isSidebarOpen={isSidebarOpen}
-        conversationHistory={conversationHistory}
-        onChatClick={handleChatClick}
-        onDeleteChat={handleDeleteChat}
-        onAddChat={handleAddChat}
-        onRenameChat={onRenameChat}
-        activeSessionId={state.currentSessionId} // Passer la session active
-      />
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <Sidebar
+            toggleSidebar={toggleSidebar}
+            isSidebarOpen={isSidebarOpen}
+            conversationHistory={conversationHistory}
+            onChatClick={handleChatClick}
+            onDeleteChat={handleDeleteChat}
+            onAddChat={handleAddChat}
+            onRenameChat={onRenameChat}
+            activeSessionId={state.currentSessionId} // Passer la session active
+        />
 
 
-      {/* Main Chat Area */}
-      <div className="flex flex-col flex-1">
-        {/* Header */}
-        <div className="p-4 bg-white shadow-md flex justify-between items-center">
-          <button onClick={toggleSidebar} className="text-gray-600">
-            ☰
-          </button>
-          <h2 className="text-lg font-semibold">Discussion</h2>
+        {/* Main Chat Area */}
+        <div className="flex flex-col flex-1">
+          {/* Header */}
+          <div className="p-4 bg-white shadow-md flex justify-between items-center">
+            <button onClick={toggleSidebar} className="text-gray-600">
+              ☰
+            </button>
+            <h2 className="text-lg font-semibold">Discussion</h2>
 
-          {/* GPT Model Selector */}
-          <select
-            onChange={(e) => setGptModel(e.target.value)}
-            value={gptModel}
-            className="bg-white p-2 rounded-lg cursor-pointer transition"
-          >
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o-mini</option>
-            <option value="gpt-4.1">GPT-4.1</option>
-            <option value="gpt-4.1-mini">GPT-4.1-mini</option>
-            <option value="gpt-4.1-nano">GPT-4.1-nano</option>
-            <option value="gpt-4.5-preview">GPT-4.5-preview</option>
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K</option>
-            <option value="dall-e-3">DALL·E 3</option>
-          </select>
+            {/* GPT Model Selector */}
+            <select
+                onChange={(e) => setGptModel(e.target.value)}
+                value={gptModel}
+                className="bg-white p-2 rounded-lg cursor-pointer transition"
+            >
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4o-mini">GPT-4o-mini</option>
+              <option value="gpt-4.1">GPT-4.1</option>
+              <option value="gpt-4.1-mini">GPT-4.1-mini</option>
+              <option value="gpt-4.1-nano">GPT-4.1-nano</option>
+              <option value="gpt-4.5-preview">GPT-4.5-preview</option>
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K</option>
+              <option value="dall-e-3">DALL·E 3</option>
+            </select>
 
-          <div className="w-8 h-8 rounded-full bg-gray-300"></div>
-        </div>
-
-        {/* Chat Zone */}
-        <div className="flex flex-col flex-1 overflow-hidden bg-gray-50 w-full">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 flex-col w-full max-w-9/10">
-            {selected.messages.map((msg, index) => (
-              <MessageBubble
-              key={msg._id || index} // <- attention : `_id` au lieu de `id`
-              text={msg.role !="user" && msg.role !="assistant"?"" :msg.content}
-              sender={msg.role}
-              image={msg.image}
-              timestamp={msg.timestamp}
-              imageUrl={msg.role == "function"? msg.content: msg.imageUrl}
-              />
-            ))}
-            <div ref={messagesEndRef} />
+            <div className="w-8 h-8 rounded-full bg-gray-300"></div>
           </div>
 
-        </div>
+          {/* Chat Zone */}
+          <div className="flex flex-col flex-1 overflow-hidden bg-gray-50 w-full">
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 flex-col w-full max-w-9/10">
+              {selected.messages.map((msg, index) => (
+                  <MessageBubble
+                      key={msg._id || index} // <- attention : `_id` au lieu de `id`
+                      text={msg.role !="user" && msg.role !="assistant"?"" :msg.content}
+                      sender={msg.role}
+                      image={msg.image}
+                      timestamp={msg.timestamp}
+                      imageUrl={msg.role == "function"? msg.content: msg.imageUrl}
+                  />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
 
-        {/* Input */}
-        <div className="p-4 bg-white border-t">
-          <MessageInput
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onSend={(input) => sendMessage(input)}
-          />
+          </div>
+
+          {/* Input */}
+          <div className="p-4 bg-white border-t">
+            <MessageInput
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onSend={(input) => sendMessage(input)}
+            />
+          </div>
         </div>
       </div>
-    </div>
   );
 }
