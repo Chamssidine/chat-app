@@ -54,7 +54,7 @@ export default async function handler(req, res) {
                 ],
             }
         } else if(file) {
-            await uploadBase64Pdf(file.data);
+            fileId = await uploadBase64Pdf(file.data);
             userMessage = {
                 role: role,
                 content:[
@@ -62,6 +62,7 @@ export default async function handler(req, res) {
                     {
                         type: "file",
                         filename: file.name,
+                        file_id: fileId,
                         file_data: "deja chargeé",
                     },
                 ],
@@ -95,6 +96,7 @@ export default async function handler(req, res) {
                 handleFunctionCall,
                 saveMessage,
                 sendMessage,
+                fileId,
                 model
             });
 

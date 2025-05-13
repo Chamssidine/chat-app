@@ -8,7 +8,14 @@ export async function handleFunctionCall(toolCall, userId, sessionId, fileId = n
 
     if (functionName === FUNCTION_NAMES.PROCESS_PDF) {
         console.log("process pdf called");
-        return await processPdf(toolCall, fileId);
+
+        const result =  await processPdf(toolCall, fileId);
+        return {
+            role: "assistant",
+            name: functionName,
+            content: result
+        };
+
     }
 
     if (functionName === FUNCTION_NAMES.IMAGE_GEN) {
@@ -67,11 +74,12 @@ export async function runToolCallsAndRespond({
                                                  handleFunctionCall,
                                                  saveMessage,
                                                  sendMessage,
+                                                 fileId,
                                                  model
                                              }) {
 
     for (const call of toolCalls) {
-        const toolResponse = await handleFunctionCall(call, userId, sessionId);
+        const toolResponse = await handleFunctionCall(call, userId, sessionId, fileId)
         console.log("tool response", toolResponse);
 
         await saveMessage(sessionId, toolResponse);
