@@ -1,0 +1,59 @@
+.dashboard-panel {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    background-color: white;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+    transition: right 0.5s ease;
+    z-index: 1000;
+}
+
+.dashboard-panel.active {
+    right: 0;
+}
+
+.close-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    margin: 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(#27ae60 78%, #ecf0f1 0%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.section {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.section h2 {
+    margin-top: 0;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+ul li {
+    margin-bottom: 8px;
+}
