@@ -93,7 +93,6 @@ export default async function handler(req, res) {
                 toolCalls,
                 sessionId,
                 userId,
-                handleFunctionCall,
                 saveMessage,
                 sendMessage,
                 fileId,

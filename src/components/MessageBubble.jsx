@@ -1,10 +1,14 @@
+// eslint-disable-next-line no-unused-vars
   import React from 'react';
   import ReactMarkdown from 'react-markdown';
   import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
   import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-  import { FiCopy, FiDownload } from 'react-icons/fi';
+  import { FiCopy } from 'react-icons/fi';
   import ImageFromJson from './ImageFromJson';
+  import { extractUrl } from './ImageFromJson';
 
+
+// eslint-disable-next-line react/prop-types
   const MessageBubble = ({ text, sender, timestamp, imageUrl, image }) => {
     const copyToClipboard = (content) => {
       navigator.clipboard.writeText(content);
@@ -18,6 +22,11 @@
       link.click();
       document.body.removeChild(link);
     };
+    const isProbablyImageUrl = (value) => {
+      if (typeof value !== 'string') return false;
+      return value.match(/^https?:\/\/.+\.(png|jpg|jpeg|gif|webp)(\?.*)?$/i);
+    };
+
 
     const isUser = sender === 'user';
     return (
@@ -41,56 +50,61 @@
                   w-full
                 `}>
                   {/*Image rendu */}
-                  {(image || imageUrl || text?.includes('url')) && (
-                    <div className="relative mb-3">
+                  {(image || imageUrl || isProbablyImageUrl(text)) && (
                       <ImageFromJson
-                        content={image || imageUrl || text}
-                        onDownload={() => downloadImage(image || imageUrl || extractUrlFromText(text))}
+                          content={image || imageUrl || text}
+                          onDownload={() => downloadImage(extractUrl(image || imageUrl || text))}
                       />
-                    </div>
                   )}
-                  {/* Markdown content */}
-                  <div className="prose prose-base dark:prose-invert prose-pre:rounded-lg prose-headings:font-semibold prose-p:leading-relaxed prose-img:rounded-lg max-w-none whitespace-pre-wrap">
-                    <ReactMarkdown
-                      components={{
-                        code({ node, inline, className, children, ...props }) {
-                          const codeContent = String(children).trim();
-                          if (inline) {
-                            return (
-                              <code className="bg-gray-200 text-sm rounded px-1 dark:bg-gray-700 dark:text-white" {...props}>
-                                {children}
-                              </code>
-                            );
-                          }
-                          return (
-                            <div className="relative mb-2">
-                              <button
-                                onClick={() => copyToClipboard(codeContent)}
-                                className="absolute top-2 right-2 bg-white/70 hover:bg-white p-2 rounded-full"
-                                title="Copier le code"
-                              >
-                                <FiCopy className="text-black" size={18} />
-                              </button>
-                              <SyntaxHighlighter
-                                style={oneDark}
-                                language="javascript"
-                                PreTag="div"
-                                customStyle={{ borderRadius: '8px', fontSize: '14px' }}
-                                {...props}
-                              >
-                                {codeContent}
-                              </SyntaxHighlighter>
-                            </div>
-                          );
-                        },
-                      }}
-                    >
 
-                {Array.isArray(text)
-                    ? text.map(part => part.text || '').join('')
-                    : text}
-                    </ReactMarkdown>
-                  </div>
+                  {/* Markdown content */}
+                  {/* Only render text if it's not just a pure image URL */}
+                  {!isProbablyImageUrl(text) && (
+                      <div className="prose prose-base dark:prose-invert prose-pre:rounded-lg prose-headings:font-semibold prose-p:leading-relaxed prose-img:rounded-lg max-w-none whitespace-pre-wrap">
+                        <ReactMarkdown
+                            components={{
+                              // eslint-disable-next-line no-unused-vars
+                              code({ node, inline, className, children, ...props }) {
+                                const codeContent = String(children).trim();
+                                if (inline) {
+                                  return (
+                                      <code className="bg-gray-200 text-sm rounded px-1 dark:bg-gray-700 dark:text-white" {...props}>
+                                        {children}
+                                      </code>
+                                  );
+                                }
+                                return (
+                                    <div className="relative mb-2">
+                                      <button
+                                          onClick={() => copyToClipboard(codeContent)}
+                                          className="absolute top-2 right-2 bg-white/70 hover:bg-white p-2 rounded-full"
+                                          title="Copier le code"
+                                      >
+                                        <FiCopy className="text-black" size={18} />
+                                      </button>
+                                      <SyntaxHighlighter
+                                          style={oneDark}
+                                          language="javascript"
+                                          PreTag="div"
+                                          customStyle={{ borderRadius: '8px', fontSize: '14px' }}
+                                          {...props}
+                                      >
+                                        {codeContent}
+                                      </SyntaxHighlighter>
+                                    </div>
+                                );
+                              },
+                            }}
+                        >
+
+                          {Array.isArray(text)
+                              // eslint-disable-next-line react/prop-types
+                              ? text.map(part => part.text || '').join('')
+                              : text}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+
 
                   {/* Timestamp badge */}
                   <div className="absolute -bottom-4 right-2 text-[10px] text-gray-600 dark:text-gray-300 ">

@@ -3,7 +3,7 @@ import {getConversation, normalizeMessages, updateConversationName} from "./conv
 import {FUNCTION_NAMES} from "./constants.js";
 import {processPdf} from "./fileService.js";
 
-export async function handleFunctionCall(toolCall, userId, sessionId, fileId = null) {
+export async function handleFunctionCall(toolCall, userId, sessionId, fileId) {
     const functionName = toolCall.function.name;
 
     if (functionName === FUNCTION_NAMES.PROCESS_PDF) {
@@ -71,7 +71,6 @@ export async function runToolCallsAndRespond({
                                                  toolCalls,
                                                  sessionId,
                                                  userId,
-                                                 handleFunctionCall,
                                                  saveMessage,
                                                  sendMessage,
                                                  fileId,

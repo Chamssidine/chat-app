@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FiDownload, FiX } from 'react-icons/fi';
 
 // Utility to extract URL from content (string or object)
-const extractUrl = (content) => {
+export const extractUrl = (content) => {
   try {
     if (!content) return '';
 
@@ -38,6 +38,7 @@ const extractUrl = (content) => {
 
 
 
+// eslint-disable-next-line react/prop-types
 const ImageFromJson = ({ content, onDownload }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const url = extractUrl(content);

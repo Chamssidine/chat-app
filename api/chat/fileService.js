@@ -35,6 +35,8 @@ const openai = new OpenAI({
     apiVersion: "2024-05-15",
 });
 async function analyzePdfWithGpt(prompt, fileId) {
+
+    console.log("analyze PDF called file id: ", fileId);
     const gptResponse = await openai.responses.create({
         model: "gpt-4.1",
         input: [
