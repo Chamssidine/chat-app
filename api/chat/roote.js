@@ -49,7 +49,7 @@ export default async function handler(req, res) {
                     {
                         type: "input_image",
                         image_url:fileId,
-                        detail: "low"
+                        detail: "high"
                     },
                 ],
             }
