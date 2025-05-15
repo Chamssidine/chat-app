@@ -9,7 +9,17 @@ body,
 #root {
   height: 100%;
 }
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f5f6f8;
+  margin: 0;
+  padding: 0;
+  color: #2c3e50;
+}
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+}
 /* Ensure body and root element take full height */
 body, html {
   height: 100%;

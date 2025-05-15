@@ -1,0 +1,4 @@
+/* src/components/dashboard/TrainingSuggestions.css */
+.card-list { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.card { padding:12px; background:#f9f9f9; border-radius:6px; }
+.link-btn { margin-top:8px; background:transparent; color:#5c6bc0; border:none; cursor:pointer; }

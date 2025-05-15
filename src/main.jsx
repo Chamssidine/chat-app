@@ -1,7 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+
+import './aframe-plugins.js';
 import './index.css'
-import App from './ChatApp.jsx'
+import './chartSetup';
+import App from './components/CVAnalyzerPage.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

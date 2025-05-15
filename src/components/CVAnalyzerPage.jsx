@@ -1,8 +1,6 @@
-// CVAnalyzerPage.jsx
-// eslint-disable-next-line no-unused-vars
 import React, { useState } from "react";
 import Dashboard from "./Dashboard";
-import "./../Dashboard.css"; // tu peux aussi renommer ce fichier si tu veux
+import "./../HomePage.css";
 
 const CVAnalyzerPage = () => {
     const [dashboardVisible, setDashboardVisible] = useState(false);
@@ -15,36 +13,41 @@ const CVAnalyzerPage = () => {
             return;
         }
 
-        // Simulation d’analyse
         setTimeout(() => {
             setDashboardVisible(true);
         }, 500);
     };
 
     return (
-        <div className="container">
-            <h1>Analyse de votre CV</h1>
+        <div className="analyzer-container">
+            <h1 className="analyzer-title">Analyse de CV</h1>
 
-            <label htmlFor="cv">Téléversez votre CV (PDF)</label>
-            <input
-                type="file"
-                id="cv"
-                accept="application/pdf"
-                onChange={(e) => setCvFile(e.target.files[0])}
-            />
+            <div className="form-group">
+                <label htmlFor="cv">Téléverser votre CV (PDF)</label>
+                <input
+                    type="file"
+                    id="cv"
+                    accept="application/pdf"
+                    onChange={(e) => setCvFile(e.target.files[0])}
+                />
+            </div>
 
-            <label htmlFor="jobUrl">URL de l'offre d'emploi</label>
-            <input
-                type="url"
-                id="jobUrl"
-                placeholder="https://exemple.com/offre"
-                value={jobUrl}
-                onChange={(e) => setJobUrl(e.target.value)}
-            />
+            <div className="form-group">
+                <label htmlFor="jobUrl">Lien de l'offre d'emploi</label>
+                <input
+                    type="url"
+                    id="jobUrl"
+                    placeholder="https://exemple.com/offre"
+                    value={jobUrl}
+                    onChange={(e) => setJobUrl(e.target.value)}
+                />
+            </div>
 
-            <button onClick={handleAnalyze}>Analyser</button>
+            <button className="analyze-btn" onClick={handleAnalyze}>
+                Lancer l’analyse
+            </button>
 
-            <Dashboard visible={dashboardVisible} onClose={() => setDashboardVisible(false)} />
+             <Dashboard visible={dashboardVisible} onClose={() => setDashboardVisible(false)} />
         </div>
     );
 };

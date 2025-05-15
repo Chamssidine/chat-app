@@ -1,48 +1,46 @@
-// Dashboard.jsx
-// eslint-disable-next-line no-unused-vars
+// src/components/Dashboard.jsx
 import React from "react";
+import FormatCheck from "./dashboard/FormatCheck";
+import CareerTimeline from "./dashboard/CareerTimeline";
+import SemanticAnalysis from "./dashboard/SemanticAnalysis";
+import Benchmark from "./dashboard/Benchmark";
+import SoftSkills from "./dashboard/SoftSkills";
+import TrainingSuggestions from "./dashboard/TrainingSuggestions";
+import CompletenessIndex from "./dashboard/CompletenessIndex";
+import KeywordDensity from "./dashboard/KeywordDensity";
+import NetworkGraph from "./dashboard/NetworkGraph";
+import InterviewSimulator from "./dashboard/InterviewSimulator";
+import dashboardData from "../data/dashboardData";
 import "./../Dashboard.css";
 
-const Dashboard = ({ visible, onClose }) => {
+const sections = [
+    { key: "formatCheck", component: FormatCheck },
+    { key: "careerTimeline", component: CareerTimeline },
+    { key: "semanticAnalysis", component: SemanticAnalysis },
+    { key: "benchmark", component: Benchmark },
+    { key: "softSkills", component: SoftSkills },
+    { key: "trainingSuggestions", component: TrainingSuggestions },
+    { key: "completenessIndex", component: CompletenessIndex },
+    { key: "keywordDensity", component: KeywordDensity },
+    { key: "networkGraph", component: NetworkGraph },
+    { key: "interviewSimulator", component: InterviewSimulator },
+];
+
+export default function Dashboard({ visible, onClose }) {
     return (
         <div className={`dashboard-panel ${visible ? "active" : ""}`}>
-            <button className="close-btn" onClick={onClose}>
-                Fermer
-            </button>
-
-            <div className="section">
-                <h2>Score Global</h2>
-                <div className="score-circle">78%</div>
-                <p style={{ textAlign: "center" }}>🔎 Vous êtes sur la bonne voie !</p>
+            <div className="button-row">
+                <button className="btn close-btn" onClick={onClose}>
+                    Fermer
+                </button>
             </div>
-
-            <div className="section">
-                <h2>Compétences Correspondantes</h2>
-                <ul>
-                    <li>✔️ Développement mobile (Android)</li>
-                    <li>✔️ UI/UX avec Jetpack Compose</li>
-                    <li>✔️ Firebase Auth & Firestore</li>
-                </ul>
-            </div>
-
-            <div className="section">
-                <h2>Compétences Manquantes</h2>
-                <ul>
-                    <li>❌ Tests automatisés</li>
-                    <li>❌ Intégration continue</li>
-                </ul>
-            </div>
-
-            <div className="section">
-                <h2>Conseils Personnalisés</h2>
-                <ul>
-                    <li>📌 Ajoutez des résultats mesurables</li>
-                    <li>📌 Mentionnez vos projets GitHub</li>
-                    <li>📌 Préparez vos soft skills</li>
-                </ul>
+            <div className="container">
+                {sections.map(({ key, component: Section }) => {
+                    const data = dashboardData[key];
+                    if (!data) return null; // n'affiche pas si pas de données
+                    return <Section key={key} data={data} />;
+                })}
             </div>
         </div>
     );
-};
-
-export default Dashboard;
+}
