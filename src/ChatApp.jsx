@@ -5,6 +5,7 @@ import MessageInput from "./components/MessageInput";
 import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 import { useReducer } from 'react';
+import CVAnalyzerPage from "./components/CVAnalyzerPage.jsx";
 
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
   const [message, setMessage] = useState("");
   const [gptModel, setGptModel] = useState("gpt-4o");
   const messagesEndRef = useRef(null);
+  const [activeTool, setActiveTool] = useState(null);
 
   const conversationHistory = state.sessions.map(session => ({
     sessionId:    session.sessionId,              // clef unique
@@ -57,6 +59,9 @@ export default function App() {
     lastMessage:  (session.messages.slice(-1)[0]?.content) || "",
   }));
 
+  const handleToolkitClick = () => {
+    setActiveTool(prev => (prev === "cv" ? null : "cv"));
+  };
 
   const loadMessages = async () => {
     if(!state.currentSessionId)return;
@@ -270,72 +275,70 @@ export default function App() {
         <Sidebar
             toggleSidebar={toggleSidebar}
             isSidebarOpen={isSidebarOpen}
+            onToolkitClick={handleToolkitClick}
             conversationHistory={conversationHistory}
             onChatClick={handleChatClick}
             onDeleteChat={handleDeleteChat}
             onAddChat={handleAddChat}
             onRenameChat={onRenameChat}
-            activeSessionId={state.currentSessionId} // Passer la session active
+            activeSessionId={state.currentSessionId}
         />
 
-
-        {/* Main Chat Area */}
-        <div className="flex flex-col flex-1">
-          {/* Header */}
-          <div className="p-4 bg-white shadow-md flex justify-between items-center">
-            <button onClick={toggleSidebar} className="text-gray-600">
-              ☰
-            </button>
-            <h2 className="text-lg font-semibold">Discussion</h2>
-
-            {/* GPT Model Selector */}
-            <select
-                onChange={(e) => setGptModel(e.target.value)}
-                value={gptModel}
-                className="bg-white p-2 rounded-lg cursor-pointer transition"
-            >
-              <option value="gpt-4o">GPT-4o</option>
-              <option value="gpt-4o-mini">GPT-4o-mini</option>
-              <option value="gpt-4.1">GPT-4.1</option>
-              <option value="gpt-4.1-mini">GPT-4.1-mini</option>
-              <option value="gpt-4.1-nano">GPT-4.1-nano</option>
-              <option value="gpt-4.5-preview">GPT-4.5-preview</option>
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K</option>
-              <option value="dall-e-3">DALL·E 3</option>
-            </select>
-
-            <div className="w-8 h-8 rounded-full bg-gray-300"></div>
-          </div>
-
-          {/* Chat Zone */}
-          <div className="flex flex-col flex-1 overflow-hidden bg-gray-50 w-full">
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 flex-col w-full max-w-9/10">
-              {selected.messages.map((msg, index) => (
-                  <MessageBubble
-                      key={msg._id || index} // <- attention : `_id` au lieu de `id`
-                      text={msg.role !="user" && msg.role !="assistant"?"" :msg.content}
-                      sender={msg.role}
-                      image={msg.image}
-                      timestamp={msg.timestamp}
-                      imageUrl={msg.role == "function"? msg.content: msg.imageUrl}
-                  />
-              ))}
-              <div ref={messagesEndRef} />
+        {/* Main Area en deux colonnes si toolkit actif */}
+        <div className="flex flex-1">
+          {/* Chat (gauche) */}
+          <div className="flex flex-col flex-1">
+            {/* Header */}
+            <div className="p-4 bg-white shadow-md flex justify-between items-center">
+              <button onClick={toggleSidebar} className="text-gray-600">
+                ☰
+              </button>
+              <h2 className="text-lg font-semibold">Discussion</h2>
+              <select
+                  onChange={(e) => setGptModel(e.target.value)}
+                  value={gptModel}
+                  className="bg-white p-2 rounded-lg cursor-pointer transition"
+              >
+                {/* options… */}
+              </select>
+              <div className="w-8 h-8 rounded-full bg-gray-300" />
             </div>
 
+            {/* Chat Zone */}
+            <div className="flex flex-col flex-1 overflow-hidden bg-gray-50 w-full">
+              <div className="flex-1 overflow-y-auto p-4 flex-col w-full max-w-9/10">
+                {selected.messages.map((msg, idx) => (
+                    <MessageBubble
+                        key={msg._id || idx}
+                        text={["user", "assistant"].includes(msg.role) ? msg.content : ""}
+                        sender={msg.role}
+                        image={msg.image}
+                        timestamp={msg.timestamp}
+                        imageUrl={msg.role === "function" ? msg.content : msg.imageUrl}
+                    />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Input */}
+            <div className="p-4 bg-white border-t">
+              <MessageInput
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onSend={(input) => sendMessage(input)}
+              />
+            </div>
           </div>
 
-          {/* Input */}
-          <div className="p-4 bg-white border-t">
-            <MessageInput
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onSend={(input) => sendMessage(input)}
-            />
-          </div>
+          {/* Analyse de CV (droite) */}
+          {activeTool === "cv" && (
+              <div className="w-1/3 bg-white border-l border-gray-200 p-4 overflow-auto">
+                <CVAnalyzerPage />
+              </div>
+          )}
         </div>
       </div>
   );
+
 }

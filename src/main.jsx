@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client'
 import './aframe-plugins.js';
 import './index.css'
 import './chartSetup';
-import App from './components/CVAnalyzerPage.jsx'
+import App from './ChatApp.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
