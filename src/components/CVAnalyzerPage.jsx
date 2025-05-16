@@ -43,10 +43,13 @@ const CVAnalyzerPage = () => {
                 />
             </div>
 
-            <button className="analyze-btn" onClick={handleAnalyze}>
+            <button className="analyze-btn left" onClick={handleAnalyze}>
                 Lancer l’analyse
             </button>
 
+            <button className= "" onClick={handleAnalyze}>
+                Voir Resultat
+            </button>
              <Dashboard visible={dashboardVisible} onClose={() => setDashboardVisible(false)} />
         </div>
     );

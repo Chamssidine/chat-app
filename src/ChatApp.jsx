@@ -6,6 +6,7 @@ import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 import { useReducer } from 'react';
 import CVAnalyzerPage from "./components/CVAnalyzerPage.jsx";
+import { AnimatePresence, motion } from "framer-motion";
 
 
 export default function App() {
@@ -332,11 +333,20 @@ export default function App() {
           </div>
 
           {/* Analyse de CV (droite) */}
-          {activeTool === "cv" && (
-              <div className="w-1/3 bg-white border-l border-gray-200 p-4 overflow-auto">
-                <CVAnalyzerPage />
-              </div>
-          )}
+          <AnimatePresence>
+            {activeTool === "cv" && (
+                <motion.div
+                    key="cv-analyzer"
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 30 }}
+                    transition={{ duration: 0.1 }}
+                    className="w-1/3 bg-white border-l border-gray-200 p-4 overflow-auto"
+                >
+                  <CVAnalyzerPage />
+                </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
   );
