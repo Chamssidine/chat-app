@@ -343,7 +343,10 @@ export default function App() {
                     transition={{ duration: 0.1 }}
                     className="w-1/3 bg-white border-l border-gray-200 p-4 overflow-auto"
                 >
-                  <CVAnalyzerPage />
+                  <CVAnalyzerPage
+                    onUpload={(data) => sendMessage(data)}
+
+                  />
                 </motion.div>
             )}
           </AnimatePresence>

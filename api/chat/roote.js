@@ -76,7 +76,7 @@ export default async function handler(req, res) {
 
 
         let conversation = await getConversation(sessionId);
-       // await saveMessage(sessionId, developerMessage);
+        await saveMessage(sessionId, developerMessage);
         await saveMessage(sessionId, userMessage);
         conversation = await getConversation(sessionId);
 

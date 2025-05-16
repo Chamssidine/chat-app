@@ -1,5 +1,5 @@
 // src/components/Dashboard.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import FormatCheck from "./dashboard/FormatCheck";
 import CareerTimeline from "./dashboard/CareerTimeline";
 import SemanticAnalysis from "./dashboard/SemanticAnalysis";
@@ -26,7 +26,18 @@ const sections = [
     { key: "interviewSimulator", component: InterviewSimulator },
 ];
 
-export default function Dashboard({ visible, onClose }) {
+export default function Dashboard({ visible, onClose, analysisResult }) {
+    const [loading, setLoading] = useState(true);
+    console.log(analysisResult);
+    // Simule une requête asynchrone
+    useEffect(() => {
+        if (visible) {
+            setLoading(!analysisResult);
+        } else {
+            setLoading(true);
+        }
+    }, [visible]);
+
     return (
         <div className={`dashboard-panel ${visible ? "active" : ""}`}>
             <div className="button-row">
@@ -35,11 +46,23 @@ export default function Dashboard({ visible, onClose }) {
                 </button>
             </div>
             <div className="container">
-                {sections.map(({ key, component: Section }) => {
-                    const data = dashboardData[key];
-                    if (!data) return null; // n'affiche pas si pas de données
-                    return <Section key={key} data={data} />;
-                })}
+                {loading ? (
+                    // Affiche 5 skeletons pendant le chargement
+                    Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="section skeleton">
+                            <div className="skeleton-title" />
+                            <div className="skeleton-line short" />
+                            <div className="skeleton-line long" />
+                        </div>
+                    ))
+                ) : (
+                    // Affiche les vraies sections quand loading === false
+                    sections.map(({ key, component: Section }) => {
+                        const data = analysisResult[key];
+                        if (!data) return null;
+                        return <Section key={key} data={data} />;
+                    })
+                )}
             </div>
         </div>
     );
