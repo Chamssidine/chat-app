@@ -6,6 +6,7 @@
   import { FiCopy } from 'react-icons/fi';
   import ImageFromJson from './ImageFromJson';
   import { extractUrl } from './ImageFromJson';
+  import rehypeRaw from 'rehype-raw';
 
 
 // eslint-disable-next-line react/prop-types
@@ -62,7 +63,18 @@
                   {!isProbablyImageUrl(text) && (
                       <div className="prose prose-base dark:prose-invert prose-pre:rounded-lg prose-headings:font-semibold prose-p:leading-relaxed prose-img:rounded-lg max-w-none whitespace-pre-wrap">
                         <ReactMarkdown
+                            rehypePlugins={[rehypeRaw]}
                             components={{
+
+                                a: ({ href, children }) => (
+                                    <a
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300"
+                                    >
+                                        {children}
+                                    </a>),
                               // eslint-disable-next-line no-unused-vars
                               code({ node, inline, className, children, ...props }) {
                                 const codeContent = String(children).trim();
@@ -97,10 +109,11 @@
                             }}
                         >
 
-                          {Array.isArray(text)
-                              // eslint-disable-next-line react/prop-types
-                              ? text.map(part => part.text || '').join('')
-                              : text}
+                            {Array.isArray(text)
+                                // eslint-disable-next-line react/prop-types
+                                ? text.map(part => (part.text || '')).join('\n\n')
+                                : text}
+
                         </ReactMarkdown>
                       </div>
                     )}

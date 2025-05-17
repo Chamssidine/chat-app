@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useReducer } from 'react';
 import CVAnalyzerPage from "./components/CVAnalyzerPage.jsx";
 import { AnimatePresence, motion } from "framer-motion";
+import {extractJson, transformToDashboardData} from "./utils/parseUtils.js";
 
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
   const [gptModel, setGptModel] = useState("gpt-4o");
   const messagesEndRef = useRef(null);
   const [activeTool, setActiveTool] = useState(null);
+  const [analysisResult, setAnalysisResult] = useState(null);
 
   const conversationHistory = state.sessions.map(session => ({
     sessionId:    session.sessionId,              // clef unique
@@ -239,11 +241,14 @@ export default function App() {
         file: input.file?.type === "pdf" ? input.file : null,
       };
       const response = await axios.post("http://localhost:3000/api/chat", payload);
-
-
       const reply = response.data.reply;
-      const analysis = response.data.analysis;
+      if(response.data.analysis) {
+        const analysis = response.data.analysis;
+        const rawAnalysis = extractJson(response.data.analysis);
+        const parsed = transformToDashboardData(rawAnalysis);
+        setAnalysisResult(parsed);
 
+      }
       const botMessage = {
         _id: Date.now() + 1,
         role: "assistant",
@@ -347,6 +352,8 @@ export default function App() {
                 >
                   <CVAnalyzerPage
                     onUpload={(data) => sendMessage(data)}
+                    gptModel={gptModel}
+                    JsonAnalisys={analysisResult}
 
                   />
                 </motion.div>

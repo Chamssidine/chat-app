@@ -4,10 +4,10 @@ import Dashboard from "./Dashboard";
 import "./../HomePage.css";
 import { v4 as uuidv4 } from 'uuid';
 import { handleFileInput } from "../utils/fileUtils.js";
-import { extractJson } from "../utils/parseUtils.js";
+import {extractJson, transformToDashboardData} from "../utils/parseUtils.js";
 import axios from "axios";
 
-const CVAnalyzerPage = ({ onUpload, gptModel }) => {
+const CVAnalyzerPage = ({ onUpload, gptModel, JsonAnalisys }) => {
     const [pdfPreview, setPdfPreview] = useState(null);
     const [attachedFile, setAttachedFile] = useState(null);
     const [jobUrl, setJobUrl] = useState("");
@@ -31,7 +31,12 @@ const CVAnalyzerPage = ({ onUpload, gptModel }) => {
                 "http://localhost:3000/api/chat",
                 payload
             );
-            const parsed = extractJson(response.data.content);
+            const analysis = response.data.analysis;
+            const rawAnalysis = extractJson(response.data.analysis);
+            const parsed = transformToDashboardData(rawAnalysis);
+            console.log("Raw analysis", analysis);
+            console.log("Parsed", transformToDashboardData(analysis));
+
             if (parsed) {
                 setAnalysisResult(parsed);
               } else {
@@ -52,7 +57,7 @@ const CVAnalyzerPage = ({ onUpload, gptModel }) => {
         setAnalysisResult(null);
         setDashboardVisible(true);
         // Send to backend
-        sendPDF({ file: attachedFile, text: `Analyser ce CV pour ce poste ${jobUrl} n'oublie pas que tu dois repondre uniquement par le json` });
+        onUpload({ file: attachedFile, text: `Analyser ce CV pour ce poste ${jobUrl} n'oublie pas que tu dois repondre uniquement par le json` });
     };
 
     const handleFileChange = async (e) => {
@@ -123,7 +128,7 @@ const CVAnalyzerPage = ({ onUpload, gptModel }) => {
             <Dashboard
                 visible={dashboardVisible}
                 onClose={() => setDashboardVisible(false)}
-                analysisResult={analysisResult}
+                analysisResult={JsonAnalisys}
             />
         </div>
     );
