@@ -1,4 +1,3 @@
-// src/components/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import FormatCheck from "./dashboard/FormatCheck";
 import CareerTimeline from "./dashboard/CareerTimeline";
@@ -10,7 +9,6 @@ import CompletenessIndex from "./dashboard/CompletenessIndex";
 import KeywordDensity from "./dashboard/KeywordDensity";
 import NetworkGraph from "./dashboard/NetworkGraph";
 import InterviewSimulator from "./dashboard/InterviewSimulator";
-import dashboardData from "../data/dashboardData";
 import "./../Dashboard.css";
 
 const sections = [
@@ -28,15 +26,16 @@ const sections = [
 
 export default function Dashboard({ visible, onClose, analysisResult }) {
     const [loading, setLoading] = useState(true);
-    console.log(analysisResult);
-    // Simule une requête asynchrone
+
     useEffect(() => {
         if (visible) {
-            setLoading(!analysisResult);
+            setLoading(true);
+            // Dès que nous avons analysisResult, on arrête le loading
+            if (analysisResult) setLoading(false);
         } else {
             setLoading(true);
         }
-    }, [visible]);
+    }, [visible, analysisResult]);
 
     return (
         <div className={`dashboard-panel ${visible ? "active" : ""}`}>
@@ -46,8 +45,7 @@ export default function Dashboard({ visible, onClose, analysisResult }) {
                 </button>
             </div>
             <div className="container">
-                {loading ? (
-                    // Affiche 5 skeletons pendant le chargement
+                {loading || !analysisResult ? (
                     Array.from({ length: 5 }).map((_, i) => (
                         <div key={i} className="section skeleton">
                             <div className="skeleton-title" />
@@ -56,7 +54,6 @@ export default function Dashboard({ visible, onClose, analysisResult }) {
                         </div>
                     ))
                 ) : (
-                    // Affiche les vraies sections quand loading === false
                     sections.map(({ key, component: Section }) => {
                         const data = analysisResult[key];
                         if (!data) return null;

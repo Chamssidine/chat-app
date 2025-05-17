@@ -238,22 +238,24 @@ export default function App() {
         image: input.file?.type === "image" ? input.file.data : null,
         file: input.file?.type === "pdf" ? input.file : null,
       };
-
-
       const response = await axios.post("http://localhost:3000/api/chat", payload);
+
+
+      const reply = response.data.reply;
+      const analysis = response.data.analysis;
 
       const botMessage = {
         _id: Date.now() + 1,
         role: "assistant",
         content: gptModel === "dall-e-3"
             ? "Here is your generated image:"
-            : response.data.reply,
+            : reply.content, // ⚠️ .content ici, car `reply` est un objet complet
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        imageUrl: gptModel === "dall-e-3" ? response.data.reply : response.data.imageUrl,
+        imageUrl: gptModel === "dall-e-3" ? reply : response.data.imageUrl,
       };
 
-      fetchConversations();
       dispatch({ type: "ADD_MESSAGE", payload: botMessage });
+      console.log("PDF Analysis", analysis);
 
     } catch (error) {
       console.error("Error sending message:", error);

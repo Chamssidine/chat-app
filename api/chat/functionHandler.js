@@ -77,10 +77,12 @@ export async function runToolCallsAndRespond({
                                                  model
                                              }) {
 
+    let pdfJsonAnalysis =[ ]
     for (const call of toolCalls) {
         const toolResponse = await handleFunctionCall(call, userId, sessionId, fileId)
         console.log("tool response", toolResponse);
-
+        if(call.function.name === FUNCTION_NAMES.PROCESS_PDF)
+            pdfJsonAnalysis = toolResponse.content;
         await saveMessage(sessionId, toolResponse);
 
     }
@@ -100,6 +102,6 @@ export async function runToolCallsAndRespond({
         name: finalMsg.name,
         tool_calls: finalMsg.tool_calls
     });
-    return finalMsg;
+    return pdfJsonAnalysis!=null?{ finalMsg,pdfJsonAnalysis}: {finalMsg};
 }
 

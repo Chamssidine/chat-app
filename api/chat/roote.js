@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         await saveMessage(sessionId, msg);
 
         if (toolCalls.length > 0) {
-            const finalMsg = await runToolCallsAndRespond({
+            const { finalMsg, pdfJsonAnalysis } = await runToolCallsAndRespond({
                 toolCalls,
                 sessionId,
                 userId,
@@ -98,12 +98,16 @@ export default async function handler(req, res) {
                 fileId,
                 model
             });
-
-            return res.status(200).json({ message: finalMsg });
+            console.log("final msg" );
+            console.log(finalMsg[0]);
+            console.log("final msg:", finalMsg);
+            console.log("pdf json analysis:", pdfJsonAnalysis);
+            return res.status(200).json({
+                reply: finalMsg,
+                analysis: pdfJsonAnalysis || []
+            });
         }
-
-
-
+        
         return res.status(200).json({ message: msg });
 
     } catch (error) {
