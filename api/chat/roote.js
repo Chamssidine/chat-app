@@ -98,16 +98,13 @@ export default async function handler(req, res) {
                 fileId,
                 model
             });
-            console.log("final msg" );
-            console.log(finalMsg[0]);
-            console.log("final msg:", finalMsg);
-            console.log("pdf json analysis:", pdfJsonAnalysis);
+
             return res.status(200).json({
                 reply: finalMsg,
                 analysis: pdfJsonAnalysis || []
             });
         }
-        
+
         return res.status(200).json({ message: msg });
 
     } catch (error) {

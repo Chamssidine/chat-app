@@ -74,7 +74,24 @@ const giveConversationNameFn = {
 
     }
 };
+const webSearchFn = {
+    type: "function",
+    function: {
+        name: "web_search",
+        description: "Effectue une recherche web en direct sur un sujet donné.",
+        parameters: {
+            type: "object",
+            properties: {
+                input: {
+                    type: "string",
+                    description: "Texte décrivant ce que l'utilisateur souhaite rechercher.",
+                },
+            },
+            required: ["input"],
+        },
+    },
+};
 
 export function getCallableFunctions() {
-    return [processPdfFn, createImageFn, giveConversationNameFn];
+    return [processPdfFn, createImageFn, giveConversationNameFn, webSearchFn];
 }

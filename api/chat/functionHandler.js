@@ -2,6 +2,7 @@ import {generateImageFromPrompt} from "../utils/image_generator.js";
 import {getConversation, normalizeMessages, updateConversationName} from "./conversationService.js";
 import {FUNCTION_NAMES} from "./constants.js";
 import {processPdf} from "./fileService.js";
+import {search} from "./Websearch.js";
 
 export async function handleFunctionCall(toolCall, userId, sessionId, fileId) {
     const functionName = toolCall.function.name;
@@ -59,6 +60,27 @@ export async function handleFunctionCall(toolCall, userId, sessionId, fileId) {
         }
     }
 
+    if(functionName === FUNCTION_NAMES.WEB_SEARCH){
+
+        try {
+            const args = JSON.parse(toolCall.function.arguments || "{}");
+            const result = await search(args.prompt);
+            return {
+                role: "assistant",
+                name: functionName,
+                content: result
+            };
+
+        }catch (err){
+            console.error("Error in web_search:", err);
+            return {
+                role: "function",
+                name: functionName,
+                content: `Error: ${err.message}`
+            };
+        }
+    }
+
 
     return {
         role: "function",
@@ -80,7 +102,7 @@ export async function runToolCallsAndRespond({
     let pdfJsonAnalysis =[ ]
     for (const call of toolCalls) {
         const toolResponse = await handleFunctionCall(call, userId, sessionId, fileId)
-        console.log("tool response", toolResponse);
+
         if(call.function.name === FUNCTION_NAMES.PROCESS_PDF)
             pdfJsonAnalysis = toolResponse.content;
         await saveMessage(sessionId, toolResponse);
@@ -88,13 +110,13 @@ export async function runToolCallsAndRespond({
     }
 
     const updatedConversation = await getConversation(sessionId);
-    console.log("updated conversation", updatedConversation);
+
     const followUp = await sendMessage(
         normalizeMessages(updatedConversation.messages),
         model
     );
     const finalMsg = followUp.choices[0].message;
-   console.log("final msg", finalMsg);
+
 
     await saveMessage(sessionId, {
         role: finalMsg.role,
