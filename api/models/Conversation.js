@@ -5,7 +5,7 @@ const messageSchema = new mongoose.Schema({
   content: { 
     type: mongoose.Schema.Types.Mixed, 
     required: false
-  },
+  }, contentType: { type: String, required: false },
 });
 
 

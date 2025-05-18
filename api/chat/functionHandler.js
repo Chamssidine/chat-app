@@ -1,6 +1,6 @@
 import {generateImageFromPrompt} from "../utils/image_generator.js";
 import {getConversation, normalizeMessages, updateConversationName} from "./conversationService.js";
-import {FUNCTION_NAMES} from "./constants.js";
+import {CONTENT_TYPE, FUNCTION_NAMES} from "./constants.js";
 import {processPdf} from "./fileService.js";
 import {search} from "./Websearch.js";
 
@@ -14,7 +14,8 @@ export async function handleFunctionCall(toolCall, userId, sessionId, fileId) {
         return {
             role: "assistant",
             name: functionName,
-            content: result
+            content: result,
+            contentType: CONTENT_TYPE.JSON,
         };
 
     }
@@ -68,7 +69,7 @@ export async function handleFunctionCall(toolCall, userId, sessionId, fileId) {
             return {
                 role: "assistant",
                 name: functionName,
-                content: result
+                content: result,
             };
 
         }catch (err){
