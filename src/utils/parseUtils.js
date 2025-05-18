@@ -6,12 +6,11 @@
  * @returns {object|null} — L'objet JSON parsé, ou null si échec
  */
 export function extractJson(content) {
-    // Cherche un bloc ```json ... ```
-    const regex = /```json\s*([\s\S]*?)```/;
-    const match = regex.exec(content);
-    let jsonString = match ? match[1].trim() : content.trim();
-
+    let jsonString
     try {
+        const regex = /```json\s*([\s\S]*?)```/;
+        const match = regex.exec(content);
+        jsonString = match ? match[1].trim() : content.trim();
         return JSON.parse(jsonString);
     } catch (e) {
         console.error("Parsing JSON failed:", e, jsonString);
@@ -25,7 +24,7 @@ export function extractJson(content) {
  */
 export function transformToDashboardData(raw) {
     try {
-
+        raw = extractJson(raw);
 
         return {
             formatCheck: {

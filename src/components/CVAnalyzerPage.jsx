@@ -1,63 +1,25 @@
 // src/components/CVAnalyzerPage.jsx
+// eslint-disable-next-line no-unused-vars
 import React, { useState } from "react";
 import Dashboard from "./Dashboard";
 import "./../HomePage.css";
-import { v4 as uuidv4 } from 'uuid';
 import { handleFileInput } from "../utils/fileUtils.js";
-import {extractJson, transformToDashboardData} from "../utils/parseUtils.js";
-import axios from "axios";
 
-const CVAnalyzerPage = ({ onUpload, gptModel, JsonAnalisys }) => {
+// eslint-disable-next-line react/prop-types
+const CVAnalyzerPage = ({ onUpload, JsonAnalysis }) => {
     const [pdfPreview, setPdfPreview] = useState(null);
     const [attachedFile, setAttachedFile] = useState(null);
     const [jobUrl, setJobUrl] = useState("");
     const [dashboardVisible, setDashboardVisible] = useState(false);
     const [analysisResult, setAnalysisResult] = useState(null);
 
-    const sendPDF = async (file) => {
-        if (!file) return;
-        try {
-            const sessionId = uuidv4();
-            const payload = {
-                model: gptModel,
-                sessionId,
-                userId: "id_123",
-                role: "system",
-                message: file.text,
-                file: file.file,
-                image: null,
-            };
-            const response = await axios.post(
-                "http://localhost:3000/api/chat",
-                payload
-            );
-            const analysis = response.data.analysis;
-            const rawAnalysis = extractJson(response.data.analysis);
-            const parsed = transformToDashboardData(rawAnalysis);
-            console.log("Raw analysis", analysis);
-            console.log("Parsed", transformToDashboardData(analysis));
-
-            if (parsed) {
-                setAnalysisResult(parsed);
-              } else {
-             console.warn("Aucun JSON valide détecté dans la réponse IA");
-            }
-
-        } catch (error) {
-            console.error("Error sending message:", error);
-        }
-    };
-
     const handleAnalyze = () => {
         if (!attachedFile || !jobUrl) {
             alert("Veuillez téléverser un CV et entrer l'URL du poste.");
             return;
         }
-        // Reset previous results and show dashboard
-        setAnalysisResult(null);
+        onUpload({ file: attachedFile, text: `Analyser ce CV pour ce poste. URL:${jobUrl} n'oublie pas que tu dois repondre uniquement par le json` });
         setDashboardVisible(true);
-        // Send to backend
-        onUpload({ file: attachedFile, text: `Analyser ce CV pour ce poste ${jobUrl} n'oublie pas que tu dois repondre uniquement par le json` });
     };
 
     const handleFileChange = async (e) => {
@@ -69,9 +31,9 @@ const CVAnalyzerPage = ({ onUpload, gptModel, JsonAnalisys }) => {
     const clearPreview = () => {
         setPdfPreview(null);
         setAttachedFile(null);
-        setAnalysisResult(null);
         setDashboardVisible(false);
     };
+    console.log(JsonAnalysis.length);
 
     return (
         <div className="analyzer-container">
@@ -102,13 +64,22 @@ const CVAnalyzerPage = ({ onUpload, gptModel, JsonAnalisys }) => {
                 Lancer l’analyse
             </button>
 
-            {analysisResult && (
-                <button
-                    className="analyze-btn view-btn"
-                    onClick={() => setDashboardVisible(true)}
-                >
-                    Voir le résultat d’analyse
-                </button>
+            {/* Show result buttons once JSON analysis arrives */}
+            {JsonAnalysis && JsonAnalysis.length > 0 && (
+                <div className="results-list">
+                    {JsonAnalysis.map((item, index) => (
+                        <button
+                            key={index}
+                            className="view-btn"
+                            onClick={() => {
+                                setAnalysisResult(item);
+                                setDashboardVisible(true);
+                            }}
+                        >
+                            Voir le résultat d’analyse #{index + 1} 📊
+                        </button>
+                    ))}
+                </div>
             )}
 
             {pdfPreview && (
@@ -125,10 +96,11 @@ const CVAnalyzerPage = ({ onUpload, gptModel, JsonAnalisys }) => {
                 </div>
             )}
 
+            {/* Dashboard modal for displaying analysis result */}
             <Dashboard
                 visible={dashboardVisible}
                 onClose={() => setDashboardVisible(false)}
-                analysisResult={JsonAnalisys}
+                analysisResult={analysisResult}
             />
         </div>
     );

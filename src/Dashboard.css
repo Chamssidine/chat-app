@@ -1,20 +1,21 @@
-.dashboard-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 600px;
-    height: 100%;
-    background-color: #fefefe;
-    overflow-y: auto;
-    /* On décale complètement hors de l’écran */
-    transform: translateX(100%);
-    transition: transform 0.4s ease;
-    z-index: 1000;
-}
+
 
 .dashboard-panel.active {
     /* On replace dans la vue */
     transform: translateX(0);
+}
+
+/* statt width: 600px; */
+.dashboard-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    background-color: #fefefe;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.4s ease;
+    z-index: 10000;
 }
 
 
