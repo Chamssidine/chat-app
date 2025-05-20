@@ -1,0 +1,56 @@
+.benchmark-section {
+    padding: 24px;
+    background: var(--card-bg, #fff);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow, 0 2px 8px rgba(0, 0, 0, 0.05));
+}
+
+.benchmark-section h2 {
+    font-size: 1.6rem;
+    color: var(--text-primary, #2c3e50);
+    margin-bottom: 20px;
+}
+
+.benchmark-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 32px;
+    justify-content: center;
+}
+
+.doughnut-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+}
+
+.percent-text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent-color, #5c6bc0);
+    text-align: center;
+}
+
+.percent-text span {
+    font-size: 1rem;
+}
+
+.benchmark-info {
+    max-width: 300px;
+    font-size: 1rem;
+    color: var(--text-primary, #2c3e50);
+}
+
+.benchmark-info p {
+    margin: 0 0 12px 0;
+}
+
+.role-label {
+    color: var(--accent-color, #5c6bc0);
+    font-weight: 600;
+    text-transform: capitalize;
+}

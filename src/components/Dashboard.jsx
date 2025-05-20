@@ -10,7 +10,7 @@ import KeywordDensity from "./dashboard/KeywordDensity";
 import NetworkGraph from "./dashboard/NetworkGraph";
 import InterviewSimulator from "./dashboard/InterviewSimulator";
 import "./../Dashboard.css";
-import dashboardData from "../data/dashboardData.js";
+
 
 const sections = [
     { key: "formatCheck", component: FormatCheck },

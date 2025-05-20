@@ -1,30 +1,41 @@
 /**
- * Extrait le JSON contenu entre des balises ```json ... ```
- // ou entre simples backticks si nécessaire,
- // puis le parse en objet JS.
+ * Extrait le JSON contenu entre balises ```json ... ``` ou simples backticks
+ * puis le parse en objet JS.
  * @param {string} content — Le string brut renvoyé par l'IA
  * @returns {object|null} — L'objet JSON parsé, ou null si échec
  */
 export function extractJson(content) {
-    let jsonString
+    let jsonString = '';
     try {
-        const regex = /```json\s*([\s\S]*?)```/;
-        const match = regex.exec(content);
+        // Regex pour bloc entre ```json ... ```
+        const tripleBacktickJson = /```json\s*([\s\S]*?)```/i;
+        // Regex pour bloc entre simples ```
+        const tripleBacktick = /```([\s\S]*?)```/;
+        // Regex pour bloc entre simples ` `
+        const singleBacktick = /`([^`]*)`/;
+
+        let match =
+            tripleBacktickJson.exec(content) ||
+            tripleBacktick.exec(content) ||
+            singleBacktick.exec(content);
+
         jsonString = match ? match[1].trim() : content.trim();
         return JSON.parse(jsonString);
     } catch (e) {
-        console.error("Parsing JSON failed:", e, jsonString);
+        console.error('Parsing JSON failed:', e, '\nJSON extrait:\n', jsonString);
         return null;
     }
 }
+
 /**
  * Convertit le JSON brut analysé en format dashboardData
- * @param {object} raw - Le JSON brut (pdfJsonAnalysis)
+ * @param {object|string} raw - Le JSON brut (pdfJsonAnalysis)
  * @returns {object} - Données au format dashboardData.js
  */
 export function transformToDashboardData(raw) {
     try {
-        raw = extractJson(raw);
+        raw = typeof raw === 'string' ? extractJson(raw) : raw;
+        if (!raw || typeof raw !== 'object') throw new Error("Format JSON non valide.");
 
         return {
             formatCheck: {
@@ -35,7 +46,7 @@ export function transformToDashboardData(raw) {
             semanticAnalysis: {
                 matchedKeywords: raw.semanticAnalysis?.matchedKeywords ?? 0,
                 totalKeywords: raw.semanticAnalysis?.totalKeywords ?? 0,
-                keywords: raw.semanticAnalysis?.keywords ?? [],
+                keywordsDetail: raw.semanticAnalysis?.keywordsDetail ?? [],
             },
             benchmark: {
                 salaryPercentile: raw.benchmark?.salaryPercentile ?? 0,
@@ -47,7 +58,7 @@ export function transformToDashboardData(raw) {
                 adaptability: raw.softSkills?.adaptability ?? 0,
             },
             trainingSuggestions: raw.trainingSuggestions ?? [],
-            completenessIndex: raw.completenessIndex ?? 0, // plus de *100
+            completenessIndex: raw.completenessIndex ?? 0,
             keywordDensity: raw.keywordDensity ?? [],
             networkGraph: {
                 nodes: raw.networkGraph?.nodes ?? [],
@@ -58,8 +69,7 @@ export function transformToDashboardData(raw) {
             },
         };
     } catch (e) {
-        console.error("Transform failed", e, raw);
+        console.error("Transformation JSON vers dashboardData échouée:", e, raw);
         return {};
     }
 }
-

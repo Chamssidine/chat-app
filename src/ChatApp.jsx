@@ -6,8 +6,9 @@ import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 import CVAnalyzerPage from "./components/CVAnalyzerPage.jsx";
 import { AnimatePresence, motion } from "framer-motion";
-import { transformToDashboardData } from "./utils/parseUtils.js";
+import {extractJson, transformToDashboardData} from "./utils/parseUtils.js";
 import { CONTENT_TYPE } from "../api/chat/constants.js";
+import {validateDashboardData} from "./utils/validateJson.js";
 
 export default function App() {
   const initialState = {
@@ -133,7 +134,15 @@ export default function App() {
       data.sessions.forEach(session => {
         session.messages.forEach(message => {
           if (message.contentType === "json") {
-            filteredMessages.push(transformToDashboardData(message.content));
+            const rawObject = extractJson(message.content);
+            const { valid, errors } = validateDashboardData(rawObject);
+            if (!valid) {
+              console.error("❌ JSON invalide :", errors);
+            } else {
+              const dashboardData = transformToDashboardData(rawObject);
+              filteredMessages.push(dashboardData);
+              console.log("✅ Dashboard prêt :", dashboardData);
+            }
           } else {
             messagesWithoutJson.push(message);
           }
@@ -231,7 +240,17 @@ export default function App() {
       const response = await axios.post("http://localhost:3000/api/chat", payload);
       const data = response.data;
       if (response.data.analysis) {
-        setAnalysisResult(transformToDashboardData(response.data.analysis));
+
+        const rawObject = extractJson(response.data.analysis);
+        const { valid, errors } = validateDashboardData(rawObject);
+        if (!valid) {
+          console.error("❌ JSON invalide :", errors);
+        } else {
+          const dashboardData = transformToDashboardData(rawObject);
+          console.log("✅ Dashboard prêt :", dashboardData);
+          setAnalysisResult( dashboardData);
+        }
+
       }
       // Priorisiere reply.content, fallback auf message.content
       const botText =
@@ -267,8 +286,9 @@ export default function App() {
   }, [filteredMessages]);
   console.log(analysisResult);
 // In App.jsx, innerhalb der Funktion App()
+// App.jsx
   return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-gray-100 font-sans">
         {/* Sidebar */}
         <Sidebar
             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -282,38 +302,31 @@ export default function App() {
             activeSessionId={state.currentSessionId}
         />
 
-        {/* Hauptbereich: Chat + optional CV-Analyse */}
+        {/* Main Content */}
         <div className="flex flex-1">
-          {/* Chat-Bereich: full width oder 2/3 */}
-          <div
-              className={
-                  `flex flex-col overflow-hidden bg-gray-50 ` +
-                  (activeTool === "cv" ? "w-2/3" : "w-full")
-              }
-          >
+          {/* Chat Section */}
+          <div className={`flex flex-col overflow-hidden ${activeTool === "cv" ? "w-2/3" : "w-full"} bg-white shadow-md rounded-l-xl`}>
             {/* Header */}
-            <div className="p-4 bg-white shadow-md flex justify-between items-center">
-              <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="text-gray-600"
-              >
+            <div className="p-4 bg-white border-b flex justify-between items-center">
+              <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-500 hover:text-gray-800 transition">
                 ☰
               </button>
-              <h2 className="text-lg font-semibold">Discussion</h2>
-              <select
-                  onChange={e => setGptModel(e.target.value)}
-                  value={gptModel}
-                  className="bg-white p-2 rounded-lg cursor-pointer transition"
-              >
-                <option value="gpt-4o">gpt-4o</option>
-                {/* weitere Modelle */}
-              </select>
-              <div className="w-8 h-8 rounded-full bg-gray-300" />
+              <h2 className="text-xl font-bold text-gray-700">Discussion</h2>
+              <div className="flex items-center gap-4">
+                <select
+                    onChange={e => setGptModel(e.target.value)}
+                    value={gptModel}
+                    className="bg-gray-100 p-2 rounded-md text-sm focus:outline-none"
+                >
+                  <option value="gpt-4o">gpt-4o</option>
+                </select>
+                <div className="w-9 h-9 rounded-full bg-gray-300" />
+              </div>
             </div>
 
-            {/* Nachrichtenliste */}
+            {/* Messages */}
             <div className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 flex-col w-full">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {filteredMessages.map((msg, idx) => (
                     <MessageBubble
                         key={msg._id || idx}
@@ -329,7 +342,7 @@ export default function App() {
             </div>
 
             {/* Input */}
-            <div className="p-4 bg-white border-t">
+            <div className="p-4 border-t bg-gray-50">
               <MessageInput
                   value={message}
                   onChange={e => setMessage(e.target.value)}
@@ -338,7 +351,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* CV-Analyse-Bereich: immer 1/3 Breite */}
+          {/* CV Analyzer */}
           <AnimatePresence>
             {activeTool === "cv" && (
                 <motion.div
@@ -346,8 +359,8 @@ export default function App() {
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
-                    transition={{ duration: 0.1 }}
-                    className="w-1/3 flex flex-col bg-white border-l border-gray-200 p-4 overflow-auto"
+                    transition={{ duration: 0.2 }}
+                    className="w-1/3 flex flex-col bg-white border-l shadow-md rounded-r-xl overflow-auto"
                 >
                   <CVAnalyzerPage
                       onUpload={data => sendMessage(data)}
@@ -359,5 +372,6 @@ export default function App() {
         </div>
       </div>
   );
+
 
 }

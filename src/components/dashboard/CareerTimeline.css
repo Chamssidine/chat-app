@@ -1,0 +1,65 @@
+/* src/components/dashboard/CareerTimeline.css */
+.career-timeline {
+    padding: 24px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+}
+
+.career-timeline h2 {
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.vertical-timeline-element--work .vertical-timeline-element-icon {
+    box-shadow: 0 0 0 4px var(--card-bg);
+    transition: transform 0.3s;
+}
+
+.vertical-timeline-element--work:hover
+.vertical-timeline-element-icon {
+    transform: scale(1.1);
+}
+
+.vertical-timeline-element--work
+.vertical-timeline-element-content {
+    border-radius: 8px;
+    padding: 16px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.vertical-timeline-element--work:hover
+.vertical-timeline-element-content {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.vertical-timeline-element-title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: var(--accent-color);
+}
+
+.vertical-timeline-element-company {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+/* Theme variables (à définir globalement) */
+:root {
+    --card-bg: #ffffff;
+    --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --accent-color: #3498db;
+}
+
+/* Variante thème sombre */
+.career-timeline.dark {
+    --card-bg: #2b2b2b;
+    --card-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    --text-primary: #ecf0f1;
+    --text-secondary: #bdc3c7;
+    --accent-color: #9b59b6;
+}
