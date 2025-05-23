@@ -76,7 +76,7 @@ const CVAnalyzerPage = ({ onUpload, JsonAnalysis }) => {
                                 setDashboardVisible(true);
                             }}
                         >
-                            Voir le résultat d’analyse #{index + 1} 📊
+                            Voir le résultat d’analyse pour le poste {item.jobTitle} 📊
                         </button>
                     ))}
                 </div>

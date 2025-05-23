@@ -38,6 +38,7 @@ export function transformToDashboardData(raw) {
         if (!raw || typeof raw !== 'object') throw new Error("Format JSON non valide.");
 
         return {
+            jobTitle: raw.jobTitle ?? "Le poste",
             formatCheck: {
                 score: raw.formatCheck?.score ?? 0,
                 issues: raw.formatCheck?.issues ?? [],

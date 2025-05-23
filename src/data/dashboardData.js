@@ -2,6 +2,7 @@
 export const dashboardSchema = {
     type: "object",
     properties: {
+        jobTitle: { type: "string" },
         formatCheck: {
             type: "object",
             properties: {

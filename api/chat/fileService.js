@@ -36,7 +36,7 @@ const openai = new OpenAI({
 });
 async function analyzePdfWithGpt(prompt, fileId) {
 
-    console.log("analyze PDF called file id: ", fileId);
+    console.log("analyze PDF called file id: ", prompt);
     const gptResponse = await openai.responses.create({
         model: "gpt-4.1",
         input: [
